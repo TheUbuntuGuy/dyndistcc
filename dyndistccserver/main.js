@@ -5,7 +5,7 @@ var db = require('./db');
 
 var PORT = 8080;
 var HTML_PATH = "html/";
-var API_PATH = "api/";
+var API_PATH = "api";
 
 http.createServer(function (request, response) {
     var pathname = url.parse(request.url).pathname;
@@ -15,18 +15,36 @@ http.createServer(function (request, response) {
         pathname = "/index.html";
     }
 
-    if (pathname.substr(0, API_PATH.length + 1) == "/" + API_PATH) {
-        console.log("API request received: %s", pathname);
+    var reqType = pathname.split("/")[1];
+
+    if (reqType == API_PATH) {
+        if (pathname.split("/").length < 3 || pathname.split("/")[2] == "") {
+            console.log("Incomplete API request received");
+            response.writeHead(404, {'Content-Type': 'text/plain'});
+            response.write("404: Incomplete API request");
+            response.end();
+            return;
+        }
+        
+        var command = pathname.split("/")[2];
+        console.log("API request received: %s", command);
         response.writeHead(200, {'Content-Type': 'text/plain'});
+
+        //DEBUG
+        if (command == "createProject") {
+            db.createProject("testproj");
+        }
+
         response.end();
     } else {
         //read the requested file
         fs.readFile(HTML_PATH + pathname.substr(1), function (err, data) {
-            console.log("File request for " + HTML_PATH + pathname.substr(1) + " received.");
+            console.log("File request for " + HTML_PATH + pathname.substr(1) + " received");
             if (err) {
                 console.log(err);
 
                 response.writeHead(404, {'Content-Type': 'text/html'});
+                response.write("404: File not found");
             } else {
 
                 response.writeHead(200, {'Content-Type': 'text/html'});
