@@ -106,8 +106,8 @@ function doCheckin(hash, project, name, ip, callback) {
                         getHostList(projectID, hash, hosts, callback);
                     });
                 } else {
-                    db.run("UPDATE hosts SET lastContact=? WHERE hash=?",
-                            date.getTime(), hash, function (err) {
+                    db.run("UPDATE hosts SET lastContact=?, ipAddr=? WHERE hash=?",
+                            date.getTime(), ip, hash, function (err) {
                         if (err) {
                             callback(hosts);
                         }
