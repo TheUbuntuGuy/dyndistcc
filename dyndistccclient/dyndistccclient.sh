@@ -39,8 +39,9 @@ function installScript ()
     echo "PROJECTNAME=$projectName" >> $SCRIPTFILE
     echo "DISTCCHOSTS=$DISTCCHOSTS" >> $SCRIPTFILE
     echo "CLIENTHASH=$clientHash" >> $SCRIPTFILE
+    echo "USERNAME=$userName" >> $SCRIPTFILE
     cat >> $SCRIPTFILE << ENDOFSCRIPT
-wget -O "$DISTCCHOSTS" "http://$SERVERADDRESS:$PORTNUMBER/api/checkin?hash=$CLIENTHASH&project=$PROJECTNAME"
+wget -O "$DISTCCHOSTS" "http://$SERVERADDRESS:$PORTNUMBER/api/checkin?hash=$CLIENTHASH&project=$PROJECTNAME&username=$USERNAME"
 ENDOFSCRIPT
 
     chmod +x $SCRIPTFILE
@@ -66,6 +67,11 @@ function askQuestions ()
     read -p "What project is this client part of (already configured on controller): " projectName
     if [ -z "$projectName" ]; then
         echo "Empty project name. Aborting installation."
+        exit 2
+    fi
+    read -p "What is your name (not parsed): " userName
+    if [ -z "$userName" ]; then
+        echo "Empty user name. Aborting installation."
         exit 2
     fi
     read -p "The nice value for incoming jobs (-20 to 20) [10]: " niceValue

@@ -6,13 +6,13 @@ var sqlite3 = require("sqlite3").verbose();
 var db = new sqlite3.Database(file);
 
 var SW_VERSION = "0.0.1";
-var DB_VERSION = 1;
+var DB_VERSION = 2;
 
 db.serialize(function () {
     if (!exists) {
         db.run("CREATE TABLE dyndistcc (version TEXT, dbVersion INTEGER)");
         db.run("CREATE TABLE projects (projectID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
-        db.run("CREATE TABLE hosts (hostID INTEGER PRIMARY KEY AUTOINCREMENT, ipAddr TEXT, projectID INTEGER, ownerName TEXT, lastContact NUMERIC)");
+        db.run("CREATE TABLE hosts (hostID INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, ipAddr TEXT, projectID INTEGER, ownerName TEXT, lastContact NUMERIC)");
 
         db.run("INSERT INTO dyndistcc (version, dbVersion) VALUES (?, ?)", SW_VERSION, DB_VERSION);
     }
@@ -38,6 +38,9 @@ function doUpgradeDB(fromVers) {
     switch (fromVers + 1) {
         case 1:
             db.run("UPDATE dyndistcc SET dbVersion=?, version=? WHERE 1", 1, SW_VERSION);
+        case 2:
+            db.run("ALTER TABLE hosts ADD COLUMN hash TEXT");
+            db.run("UPDATE dyndistcc SET dbVersion=?, version=? WHERE 1", 2, SW_VERSION);
     }
 }
 

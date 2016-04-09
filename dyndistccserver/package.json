@@ -1,7 +1,7 @@
 {
     "name": "dyndistccserver",
     "version": "0.0.1",
-    "keywords": ["util", "functional", "server", "client", "browser"],
+    "keywords": ["server", "client", "browser"],
     "author": "Mark Furneaux",
     "contributors": [],
     "dependencies": {"sqlite3": "~3.1.3"}
