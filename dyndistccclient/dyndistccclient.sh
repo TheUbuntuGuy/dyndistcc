@@ -2,6 +2,7 @@
 
 VERSION="0.0.1"
 SCRIPTFILE="/usr/local/bin/dyndistccsync"
+DISTCCCONF="/etc/default/distcc"
 
 function printVersion ()
 {
@@ -31,9 +32,10 @@ function installScript ()
 {
     echo "#!/bin/bash" >> $SCRIPTFILE
     echo "SERVERADDRESS=$serverAddr" >> $SCRIPTFILE
+    echo "PORTNUMBER=$portNum" >> $SCRIPTFILE
     echo "PROJECTNAME=$projectName" >> $SCRIPTFILE
     cat >> $SCRIPTFILE << ENDOFSCRIPT
-
+wget http://
 
 
 
@@ -52,10 +54,25 @@ function askQuestions ()
         echo "Empty server address. Aborting installation."
         exit 2
     fi
+    read -p "What is the port of the controller [33333]: " portNum
+    if [ -z "$portNum" ]; then
+        echo "Using port 33333."
+        portNum=10
+    fi
+    read -p "What network segment should we listen on (CIDR notation): " netSegment
+    if [ -z "$netSegment" ]; then
+        echo "Empty segment name. Aborting installation."
+        exit 2
+    fi
     read -p "What project is this client part of (already configured on controller): " projectName
     if [ -z "$projectName" ]; then
         echo "Empty project name. Aborting installation."
         exit 2
+    fi
+    read -p "The nice value for incoming jobs (-20 to 20) [10]: " niceValue
+    if [ -z "$niceValue" ]; then
+        echo "Using nice of 10."
+        niceValue=10
     fi
 }
 
@@ -63,9 +80,9 @@ function doInstall ()
 {
     askQuestions
 
-    if [ $(which cron | wc -l) -lt 1 ] || [ $(which wget | wc -l) -lt 1 ]; then
+    if [ $(which cron | wc -l) -lt 1 ] || [ $(which wget | wc -l) -lt 1 ] || [ $(which sed | wc -l) -lt 1 ]; then
         echo "Installing dependencies..."
-        apt-get install cron wget
+        apt-get install cron wget sed
         echo ""
         echo ""
     else
@@ -81,6 +98,13 @@ function doInstall ()
         echo "distcc is already installed..."
     fi
 
+    echo "Configuring distcc..."
+    cp $DISTCCCONF "$DISTCCCONF.bak"
+    sed -i "/^[^#]*STARTDISTCC=*/c\STARTDISTCC=\"true\"" $DISTCCCONF
+    sed -i "/^[^#]*LISTENER=*/c\LISTENER=\"\"" $DISTCCCONF
+    sed -i "/^[^#]*ALLOWEDNETS=*/c\ALLOWEDNETS=\"$netSegment\"" $DISTCCCONF
+    sed -i "/^[^#]*NICE=*/c\NICE=\"$niceValue\"" $DISTCCCONF
+
     echo "Installing scripts..."
     installScript
 
@@ -94,6 +118,22 @@ function doInstall ()
     echo "* * * * * $SCRIPTFILE #dyndistccAutoRemove" >> $CRONTMP
     crontab $CRONTMP
     rm $CRONTMP
+
+    echo "Starting distcc..."
+    #service distcc restart
+
+    if [ $? -eq 0 ]; then
+        echo ""
+        SUCCESSMSG="dyndistcc is now running for the $projectName project on the $netSegment network."
+        if [ -e "/usr/games/cowsay" ]; then
+            /usr/games/cowsay $SUCCESSMSG
+        else
+            echo $SUCCESSMSG
+        fi
+    else
+        echo ""
+        echo "Something went wrong when starting distcc. Things might not work correctly."
+    fi
 }
 
 function doUninstall ()
@@ -103,6 +143,10 @@ function doUninstall ()
     crontab -l | grep --invert-match "#dyndistccAutoRemove" | crontab -
     echo "Removing scripts..."
     rm $SCRIPTFILE
+    echo "Reverting distcc settings..."
+    cp "$DISTCCCONF.bak" $DISTCCCONF
+    echo ""
+    echo "Uninstall complete."
 }
 
 
@@ -113,6 +157,10 @@ elif [ $EUID -ne 0 ]; then
 else
     case $1 in
         "install")
+            if [ $(crontab -l | grep "#dyndistccAutoRemove" | wc -l) -gt 0 ]; then
+                echo "Error. Already installed. Please run uninstall before re-installing."
+                exit 3
+            fi
             doInstall
             ;;
         "uninstall")

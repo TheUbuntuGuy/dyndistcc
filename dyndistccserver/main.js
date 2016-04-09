@@ -3,7 +3,7 @@ var fs = require('fs');
 var url = require('url');
 var db = require('./db');
 
-var PORT = 8080;
+var PORT = 33333;
 var HTML_PATH = "html/";
 var API_PATH = "api";
 
