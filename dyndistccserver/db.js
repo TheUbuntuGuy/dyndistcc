@@ -11,8 +11,8 @@ var DB_VERSION = 2;
 db.serialize(function () {
     if (!exists) {
         db.run("CREATE TABLE dyndistcc (version TEXT, dbVersion INTEGER)");
-        db.run("CREATE TABLE projects (projectID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
-        db.run("CREATE TABLE hosts (hostID INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, ipAddr TEXT, projectID INTEGER, ownerName TEXT, lastContact NUMERIC)");
+        db.run("CREATE TABLE projects (projectID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)");
+        db.run("CREATE TABLE hosts (hostID INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT UNIQUE, ipAddr TEXT, projectID INTEGER, ownerName TEXT, lastContact NUMERIC)");
 
         db.run("INSERT INTO dyndistcc (version, dbVersion) VALUES (?, ?)", SW_VERSION, DB_VERSION);
     }

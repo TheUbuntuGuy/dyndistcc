@@ -31,11 +31,12 @@ http.createServer(function (request, response) {
         var command = pathname.split("/")[2];
         console.log("API request received: %s", command);
         if (command == "checkin") {
-            if (query.hash && query.project) {
+            if (query.hash && query.project && query.name) {
                 console.log("Checkin from " + query.hash);
                 response.writeHead(200, {'Content-Type': 'text/plain'});
                 //DEBUG
-                response.write("127.0.0.1 192.168.30.4\n");
+                //response.write("127.0.0.1 192.168.30.4\n");
+                response.write(doCheckin(query.hash, query.project, query.name, request.connection.remoteAddress));
 
                 response.end();
             } else {
@@ -66,5 +67,63 @@ http.createServer(function (request, response) {
         });
     }
 }).listen(PORT);
+
+function doCheckin(hash, project, name, ip) {
+    var hosts = "127.0.0.1";
+    var error = false;
+    var date = new Date();
+    var projectID;
+    db.get("SELECT * FROM projects WHERE name=?", project, function (err, row) {
+        if (err) {
+            error = true;
+            return;
+        }
+        if (typeof row == "undefined") {
+            //project has not been setup on server
+            error = true;
+        } else {
+            projectID = row.projectID;
+        }
+    });
+
+    if (!error) {
+        db.get("SELECT * FROM hosts INNER JOIN projects ON hosts.projectID=projects.projectID WHERE hash=?", hash, function (err, row) {
+            if (err) {
+                error = true;
+                return;
+            }
+            if (typeof row == "undefined") {
+                //host has never checked in
+                db.run("INSERT INTO hosts (hash, ipAddr, projectID, ownerName, lastContact) VALUES(?, ?, ?, ?, ?)",
+                        hash, ip, projectID, name, date.getTime(), function (err) {
+                    if (err) {
+                        error = true;
+                    }
+                });
+            } else {
+                db.run("UPDATE hosts SET lastContact=? WHERE hash=?",
+                        date.getTime(), hash, function (err) {
+                    if (err) {
+                        error = true;
+                    }
+                });
+            }
+        });
+    }
+
+    if (!error) {
+        db.all("SELECT ipAddr FROM hosts WHERE projectID=? AND lastContact>? AND hash!=?", projectID, (date.getTime() - 180000), hash, function (err, rows) {
+            if (err) {
+                error = true;
+                return;
+            }
+            for (var i = 0; i < rows.length; i++) {
+                hosts += " " + rows[i].ipAddr;
+            }
+        });
+    }
+
+    return hosts;
+}
 
 console.log('Server running at http://127.0.0.1:%s/', PORT);
