@@ -31,7 +31,7 @@ http.createServer(function (request, response) {
         response.writeHead(200, {'Content-Type': 'text/plain'});
 
         //DEBUG
-        if (command == "createProject") {
+        if (command == "checkin") {
             db.createProject("testproj");
         }
 

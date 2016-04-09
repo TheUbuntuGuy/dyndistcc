@@ -3,6 +3,7 @@
 VERSION="0.0.1"
 SCRIPTFILE="/usr/local/bin/dyndistccsync"
 DISTCCCONF="/etc/default/distcc"
+DISTCCHOSTS="/etc/distcc/hosts"
 
 function printVersion ()
 {
@@ -30,18 +31,16 @@ function printHelp ()
 
 function installScript ()
 {
+    clientHash=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+
     echo "#!/bin/bash" >> $SCRIPTFILE
     echo "SERVERADDRESS=$serverAddr" >> $SCRIPTFILE
     echo "PORTNUMBER=$portNum" >> $SCRIPTFILE
     echo "PROJECTNAME=$projectName" >> $SCRIPTFILE
+    echo "DISTCCHOSTS=$DISTCCHOSTS" >> $SCRIPTFILE
+    echo "CLIENTHASH=$clientHash" >> $SCRIPTFILE
     cat >> $SCRIPTFILE << ENDOFSCRIPT
-wget http://
-
-
-
-
-
-
+wget -O "$DISTCCHOSTS" "http://$SERVERADDRESS:$PORTNUMBER/api/checkin?hash=$CLIENTHASH&project=$PROJECTNAME"
 ENDOFSCRIPT
 
     chmod +x $SCRIPTFILE
