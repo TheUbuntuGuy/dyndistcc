@@ -7,7 +7,10 @@ var PORT = 33333;
 var HTML_PATH = "html/";
 var API_PATH = "api";
 
-db.createProject("testproj");
+//debug
+db.createProject("testproj", function () {
+
+});
 
 http.createServer(function (request, response) {
     var pathname = url.parse(request.url).pathname;
@@ -49,7 +52,35 @@ http.createServer(function (request, response) {
                 return;
             }
         } else if (command == "createProject") {
-
+            if (query.name) {
+                db.createProject(query.name, function (status) {
+                    response.writeHead(200, {'Content-Type': 'text/plain'});
+                    response.write(status);
+                    response.end();
+                });
+            } else {
+                console.log("Bad project command received");
+                response.writeHead(400, {'Content-Type': 'text/plain'});
+                response.write("#400: Bad project command received\n");
+                response.write("127.0.0.1");
+                response.end();
+                return;
+            }
+        } else if (command == "deleteProject") {
+            if (query.name) {
+                db.deleteProject(query.name, function (status) {
+                    response.writeHead(200, {'Content-Type': 'text/plain'});
+                    response.write(status);
+                    response.end();
+                });
+            } else {
+                console.log("Bad project command received");
+                response.writeHead(400, {'Content-Type': 'text/plain'});
+                response.write("#400: Bad project command received\n");
+                response.write("127.0.0.1");
+                response.end();
+                return;
+            }
         } else {
             console.log("Unsupported API request received");
             response.writeHead(400, {'Content-Type': 'text/plain'});
@@ -59,19 +90,24 @@ http.createServer(function (request, response) {
             return;
         }
     } else {
-        //read the requested interface file
-        fs.readFile(HTML_PATH + pathname.substr(1), function (err, data) {
-            console.log("File request for " + HTML_PATH + pathname.substr(1) + " received");
-            if (err) {
-                console.log(err);
-                response.writeHead(404, {'Content-Type': 'text/html'});
-                response.write("404: File not found");
-            } else {
-                response.writeHead(200, {'Content-Type': 'text/html'});
-                response.write(data.toString());
-            }
-            response.end();
-        });
+        if (pathname.substr(1) == "favicon.ico") {
+            response.writeHead(404, {'Content-Type': 'text/html'});
+            response.write("404: File not found");
+        } else {
+            //read the requested interface file
+            fs.readFile(HTML_PATH + pathname.substr(1), function (err, data) {
+                console.log("File request for " + HTML_PATH + pathname.substr(1) + " received");
+                if (err) {
+                    console.log(err);
+                    response.writeHead(404, {'Content-Type': 'text/html'});
+                    response.write("404: File not found");
+                } else {
+                    response.writeHead(200, {'Content-Type': 'text/html'});
+                    response.write(data.toString());
+                }
+                response.end();
+            });
+        }
     }
 }).listen(PORT);
 

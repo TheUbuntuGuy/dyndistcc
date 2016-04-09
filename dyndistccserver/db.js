@@ -49,25 +49,29 @@ function doUpgradeDB(fromVers) {
     });
 }
 
-function createProject(name) {
+function createProject(name, callback) {
     db.serialize(function () {
         db.run("INSERT INTO projects (name) VALUES (?)", name, function (err) {
             if (err) {
                 console.log("Error creating project. Does it already exist?");
+                callback("fail");
             } else {
                 console.log("Created project: \"" + name + "\"");
+                callback("success");
             }
         });
     });
 }
 
-function deleteProject(name) {
+function deleteProject(name, callback) {
     db.serialize(function () {
         db.run("DELETE FROM projects WHERE name=?", name, function (err) {
             if (err) {
                 console.log("Error deleting project: " + err);
+                callback("fail");
             } else {
                 console.log("Deleted project: \"" + name + "\"");
+                callback("success");
             }
         });
     });
