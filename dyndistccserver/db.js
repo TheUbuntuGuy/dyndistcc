@@ -10,6 +10,7 @@ var DB_VERSION = 2;
 
 db.serialize(function () {
     if (!exists) {
+        console.log("Creating DB...");
         db.run("CREATE TABLE dyndistcc (version TEXT, dbVersion INTEGER)");
         db.run("CREATE TABLE projects (projectID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)");
         db.run("CREATE TABLE hosts (hostID INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT UNIQUE, ipAddr TEXT, projectID INTEGER, ownerName TEXT, lastContact NUMERIC)");
@@ -19,15 +20,16 @@ db.serialize(function () {
 });
 
 function checkDBVersion() {
-    db.get("SELECT * FROM dyndistcc", function (err, row) {
-        if (err) {
-            console.log(err);
-        }
-        if (row.dbVersion < DB_VERSION) {
-            console.log("DB must be upgraded from version " + row.dbVersion + " to " + DB_VERSION);
-            doUpgradeDB(row.dbVersion);
-            console.log("DB upgraded successfully");
-        }
+    db.serialize(function () {
+        db.get("SELECT * FROM dyndistcc", function (err, row) {
+            if (err) {
+                console.log(err);
+            }
+            if (row.dbVersion < DB_VERSION) {
+                console.log("DB must be upgraded from version " + row.dbVersion + " to " + DB_VERSION);
+                doUpgradeDB(row.dbVersion);
+            }
+        });
     });
 }
 
@@ -35,23 +37,104 @@ function doUpgradeDB(fromVers) {
     console.log("Upgrading DB...");
     //intentional fall through for full upgrade
     //each case is the version the change was added in
-    switch (fromVers + 1) {
-        case 1:
-            db.run("UPDATE dyndistcc SET dbVersion=?, version=? WHERE 1", 1, SW_VERSION);
-        case 2:
-            db.run("ALTER TABLE hosts ADD COLUMN hash TEXT");
-            db.run("UPDATE dyndistcc SET dbVersion=?, version=? WHERE 1", 2, SW_VERSION);
-    }
+    db.serialize(function () {
+        switch (fromVers + 1) {
+            case 1:
+                db.run("UPDATE dyndistcc SET dbVersion=?, version=? WHERE 1", 1, SW_VERSION);
+            case 2:
+                db.run("ALTER TABLE hosts ADD COLUMN hash TEXT");
+                db.run("UPDATE dyndistcc SET dbVersion=?, version=? WHERE 1", 2, SW_VERSION);
+        }
+        console.log("DB upgraded successfully");
+    });
 }
 
 function createProject(name) {
     db.serialize(function () {
-        db.run("INSERT INTO projects (name) VALUES (?)", name);
+        db.run("INSERT INTO projects (name) VALUES (?)", name, function (err) {
+            if (err) {
+                console.log("Error creating project. Does it already exist?");
+            } else {
+                console.log("Created project: \"" + name + "\"");
+            }
+        });
+    });
+}
+
+function deleteProject(name) {
+    db.serialize(function () {
+        db.run("DELETE FROM projects WHERE name=?", name, function (err) {
+            if (err) {
+                console.log("Error deleting project: " + err);
+            } else {
+                console.log("Deleted project: \"" + name + "\"");
+            }
+        });
+    });
+}
+
+function doCheckin(hash, project, name, ip, callback) {
+    var hosts = "127.0.0.1";
+    var date = new Date();
+
+    db.serialize(function () {
+        db.get("SELECT * FROM projects WHERE name=?", project, function (err, row) {
+            //project has not been setup on server
+            if (err || typeof row == "undefined") {
+                callback(hosts);
+                return;
+            }
+
+            var projectID = row.projectID;
+
+            db.get("SELECT * FROM hosts INNER JOIN projects ON hosts.projectID=projects.projectID WHERE hash=?", hash, function (err, row) {
+                if (err) {
+                    callback(hosts);
+                    return;
+                }
+                if (typeof row == "undefined") {
+                    //host has never checked in
+                    db.run("INSERT INTO hosts (hash, ipAddr, projectID, ownerName, lastContact) VALUES(?, ?, ?, ?, ?)",
+                            hash, ip, projectID, name, date.getTime(), function (err) {
+                        if (err) {
+                            callback(hosts);
+                        }
+                        getHostList(projectID, hash, hosts, callback);
+                    });
+                } else {
+                    db.run("UPDATE hosts SET lastContact=? WHERE hash=?",
+                            date.getTime(), hash, function (err) {
+                        if (err) {
+                            callback(hosts);
+                        }
+                        getHostList(projectID, hash, hosts, callback);
+                    });
+                }
+            });
+        });
+    });
+}
+
+function getHostList(projectID, hash, hosts, callback) {
+    var date = new Date();
+    db.all("SELECT ipAddr FROM hosts WHERE projectID=? AND lastContact>? AND hash!=?", projectID, (date.getTime() - 180000), hash, function (err, rows) {
+        if (err) {
+            callback(hosts);
+            return;
+        }
+        console.log("Distributing " + rows.length + " nodes");
+        for (var i = 0; i < rows.length; i++) {
+            hosts += " " + rows[i].ipAddr;
+        }
+        hosts += "\n";
+        callback(hosts);
     });
 }
 
 checkDBVersion();
 
 module.exports = {
-    createProject: createProject
+    createProject: createProject,
+    deleteProject: deleteProject,
+    doCheckin: doCheckin
 };
