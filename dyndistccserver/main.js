@@ -23,8 +23,8 @@ http.createServer(function (request, response) {
     if (reqType == API_PATH) {
         if (pathname.split("/").length < 3 || pathname.split("/")[2] == "") {
             console.log("Incomplete API request received");
-            response.writeHead(404, {'Content-Type': 'text/plain'});
-            response.write("#404: Incomplete API request\n");
+            response.writeHead(400, {'Content-Type': 'text/plain'});
+            response.write("#400: Incomplete API request\n");
             response.write("127.0.0.1");
             response.end();
             return;
@@ -42,12 +42,21 @@ http.createServer(function (request, response) {
                 });
             } else {
                 console.log("Bad checkin received");
-                response.writeHead(404, {'Content-Type': 'text/plain'});
-                response.write("#404: Bad checkin received\n");
+                response.writeHead(400, {'Content-Type': 'text/plain'});
+                response.write("#400: Bad checkin received\n");
                 response.write("127.0.0.1");
                 response.end();
                 return;
             }
+        } else if (command == "createProject") {
+
+        } else {
+            console.log("Unsupported API request received");
+            response.writeHead(400, {'Content-Type': 'text/plain'});
+            response.write("#400: Unsupported API request\n");
+            response.write("127.0.0.1");
+            response.end();
+            return;
         }
     } else {
         //read the requested interface file
