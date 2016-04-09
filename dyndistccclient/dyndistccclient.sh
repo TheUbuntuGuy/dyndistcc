@@ -1,6 +1,7 @@
 #!/bin/bash
 
 VERSION="0.0.1"
+SCRIPTFILE="/usr/local/bin/dyndistccsync"
 
 function printVersion ()
 {
@@ -26,11 +27,36 @@ function printHelp ()
     printRoot
 }
 
+function installScript ()
+{
+    echo "#!/bin/bash" >> $SCRIPTFILE
+    echo "SERVERADDRESS=$serverAddr" >> $SCRIPTFILE
+    echo "PROJECTNAME=$projectName" >> $SCRIPTFILE
+    cat >> $SCRIPTFILE << ENDOFSCRIPT
+
+
+
+
+
+
+
+ENDOFSCRIPT
+
+    chmod +x $SCRIPTFILE
+}
+
 function askQuestions ()
 {
     read -p "What is the domain/IP address of the controller: " serverAddr
-
-    read -p "What project is this client to be part of: " projectName
+    if [ -z "$serverAddr" ]; then
+        echo "Empty server address. Aborting installation."
+        exit 2
+    fi
+    read -p "What project is this client part of (already configured on controller): " projectName
+    if [ -z "$projectName" ]; then
+        echo "Empty project name. Aborting installation."
+        exit 2
+    fi
 }
 
 function doInstall ()
@@ -40,9 +66,23 @@ function doInstall ()
     if [ $(which cron | wc -l) -lt 1 ] || [ $(which wget | wc -l) -lt 1 ]; then
         echo "Installing dependencies..."
         apt-get install cron wget
+        echo ""
+        echo ""
     else
         echo "Dependencies already installed. Skipping..."
     fi
+
+    if [ $(which distcc | wc -l) -lt 1 ]; then
+        echo "distcc is missing. Installing..."
+        apt-get install distcc
+        echo ""
+        echo ""
+    else
+        echo "distcc is already installed..."
+    fi
+
+    echo "Installing scripts..."
+    installScript
 
     echo "Writing crontab..."
     CRONTMP=$(mktemp) || exit 1
@@ -50,7 +90,8 @@ function doInstall ()
     if [ ! -s $CRONTMP ]; then
         echo "MAILTO=\"\"" >> $CRONTMP
     fi
-    echo "* * * * * echo test #dyndistccAutoRemove" >> $CRONTMP
+
+    echo "* * * * * $SCRIPTFILE #dyndistccAutoRemove" >> $CRONTMP
     crontab $CRONTMP
     rm $CRONTMP
 }
@@ -60,6 +101,8 @@ function doUninstall ()
     echo "Uninstalling..."
     echo "Removing crontab entries..."
     crontab -l | grep --invert-match "#dyndistccAutoRemove" | crontab -
+    echo "Removing scripts..."
+    rm $SCRIPTFILE
 }
 
 
