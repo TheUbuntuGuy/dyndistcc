@@ -29,7 +29,8 @@ function printHelp ()
 function askQuestions ()
 {
     read -p "What is the domain/IP address of the controller: " serverAddr
-    read -p "What project network is this client part of: " projectName
+
+    read -p "What project is this client to be part of: " projectName
 }
 
 function doInstall ()
@@ -42,10 +43,23 @@ function doInstall ()
     else
         echo "Dependencies already installed. Skipping..."
     fi
-    
-    echo ""
-    echo ""
-    
+
+    echo "Writing crontab..."
+    CRONTMP=$(mktemp) || exit 1
+    crontab -l > $CRONTMP
+    if [ ! -s $CRONTMP ]; then
+        echo "MAILTO=\"\"" >> $CRONTMP
+    fi
+    echo "* * * * * echo test #dyndistccAutoRemove" >> $CRONTMP
+    crontab $CRONTMP
+    rm $CRONTMP
+}
+
+function doUninstall ()
+{
+    echo "Uninstalling..."
+    echo "Removing crontab entries..."
+    crontab -l | grep --invert-match "#dyndistccAutoRemove" | crontab -
 }
 
 
@@ -56,12 +70,16 @@ elif [ $EUID -ne 0 ]; then
 else
     case $1 in
         "install")
-            mode="1"
             doInstall
             ;;
         "uninstall")
-            mode="2"
-            echo "Uninstalling..."
+            doUninstall
+            ;;
+        "-h")
+            printHelp
+            ;;
+        "--help")
+            printHelp
             ;;
         *)
             echo "Invalid command: $1"
