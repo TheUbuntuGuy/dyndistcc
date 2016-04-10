@@ -49,6 +49,14 @@ function printHelp ()
     printRoot
 }
 
+function checkRoot ()
+{
+    if [ $EUID -ne 0 ]; then
+        printRoot
+        exit 4
+    fi
+}
+
 function installScript ()
 {
     # Generate a random hash to identify this machine in all future checkins with the server
@@ -140,7 +148,7 @@ function doInstall ()
 
     echo "Writing crontab..."
     CRONTMP=$(mktemp) || exit 1
-    crontab -l > $CRONTMP
+    crontab -l 2>/dev/null > $CRONTMP
     if [ ! -s $CRONTMP ]; then
         echo "MAILTO=\"\"" >> $CRONTMP
     fi
@@ -155,7 +163,10 @@ function doInstall ()
 
     if [ $? -eq 0 ]; then
         echo "Checking in with the server..."
-        $SCRIPTFILE > /dev/null 2>&1 
+        $SCRIPTFILE > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            echo "ERROR: Server returned an error or was not reachable."
+        fi
         echo ""
         SUCCESSMSG="dyndistcc is now running for the $projectName project on the $netSegment network."
         if [ -e "/usr/games/cowsay" ]; then
@@ -167,13 +178,23 @@ function doInstall ()
         echo ""
         echo "Something went wrong when starting distcc. Things might not work correctly."
     fi
+
+    echo ""
+    cat << ENDOFTEXT
+If you are cross-compiling, you will need to setup your compiler.
+Create symlinks in /usr/lib/distcc that point to /bin/distcc and have the name of the cross-compile tools you are using.
+
+For example, if you are using arm-eabi-gcc and arm-eabi-g++, run:
+$ ln -s /bin/distcc /usr/lib/distcc/arm-eabi-gcc
+$ ln -s /bin/distcc /usr/lib/distcc/arm-eabi-g++
+ENDOFTEXT
 }
 
 function doUninstall ()
 {
     echo "Uninstalling..."
     echo "Removing crontab entries..."
-    crontab -l | grep --invert-match "#dyndistccAutoRemove" | crontab -
+    crontab -l 2>/dev/null | grep --invert-match "#dyndistccAutoRemove" | crontab -
     echo "Removing scripts..."
     rm $SCRIPTFILE
     echo "Reverting distcc settings..."
@@ -186,18 +207,18 @@ function doUninstall ()
 
 if [ $# -ne 1 ]; then
     printHelp
-elif [ $EUID -ne 0 ]; then
-    printRoot
 else
     case $1 in
         "install")
-            if [ $(crontab -l | grep "#dyndistccAutoRemove" | wc -l) -gt 0 ]; then
+            if [ $(crontab -l 2>/dev/null | grep "#dyndistccAutoRemove" | wc -l) -gt 0 ]; then
                 echo "Error. Already installed. Please run uninstall before re-installing."
                 exit 3
             fi
+            checkRoot
             doInstall
             ;;
         "uninstall")
+            checkRoot
             doUninstall
             ;;
         "-h")
