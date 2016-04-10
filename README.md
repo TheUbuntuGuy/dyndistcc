@@ -1,15 +1,15 @@
 # dyndistcc: Use Compile Resources Better
 ```distcc``` is a daemon for distributing C/C++ compile jobs to other computers over a network.  
-```dyndistcc``` is a simple addon system for dynamically (hence the *dyn*) distributing compile jobs to a pool of potentially changing clients.
+```dyndistcc``` is a simple addon system for dynamically distributing compile jobs to a pool of potentially changing clients.
 
 # Simple Use Case
 Lets say you and your team of 5 are working on a software project compiled with ```gcc```. Each developer can compile their code on their local workstation with, lets say, 4 cores. That's fine and all, but we want to go faster, and cannot afford new beast workstations.  
-However with ```dyndistcc``` installed, when each develop starts a compile, the job will be compiled in parallel with all the cores of all the workstations in that team. In this example, that's ```5 workstations * 4 cores = 20 cores```; which results in a nearly **5x** speed improvement.
+However with ```dyndistcc``` installed, when each developer starts a compile, the job will be compiled in parallel with all the cores of all the workstations in that team. In this example, that's ```5 workstations * 4 cores = 20 cores```; which results in a nearly **5x** speed improvement.
 
 # How It Works
 Client computers are configured as part of a 'project'. They periodically send a checkin to a server running a small node.js applet. This server application records the client and its configuration in a SQLite database and replies with a list of other clients that are part of that project that are currently online. The client will update ```distcc```'s hosts file with this new host information. As such, clients consistently have correct IP addresses and thread counts, no matter what happens on the network (DHCP, reboots, etc.). After a quick installation, no manual maintenence is required.
 
-Multiple projects can be concurrently running on the same network, and clients within a project do not need to be the same speed or have the same number of threads. Projects can be managed via a simple web interface provided by the server.  
+Multiple projects can be concurrently running on the same network, and clients within a project do not need to be the same speed or have the same number of cores. Projects can be managed via a simple web interface provided by the server.  
 ```dyndistcc``` enables a more effective use of total computing resources. It is unlikely that every developer will be using 100% of their workstation's compute capacity all the time, and sharing the extra resources with the team improves productivity. By running ```distcc``` with a positive nice value, the impact on other developers is minimal.
 
 # Why Plain distcc Falls Short
@@ -27,13 +27,11 @@ Installing ```dyndistcc``` is easy. The server is a small node.js application, a
 
 ## Clients
 1. Extract the ```dyndistccclient``` folder from the .zip, place it somewhere on the client, and ```cd``` into it.
-2. Run ```$ sudo ./dyndistccclient.sh install``` which will automagically prep the system
+2. Run ```$ sudo ./dyndistccclient.sh install``` which will automagically prep the system.
 3. Follow the simple prompts for:
    1. Address/hostname of the server
-   2. Network to bind to (for security)
-   3. Project name
-   4. Your name (for logging purposes)
-   5. Nice value for incoming compile jobs
+   2. Project name
+   3. Nice value for incoming compile jobs
 
 If everything went according to plan, you should be able to refresh the server Control Panel page and see your new host(s) appear.
 ![dyndistcc Control Panel](http://furneaux.ca/dyndistcc/dyndistcc0.0.1.png "dyndistcc Control Panel")
@@ -60,7 +58,7 @@ mark@volta:/media/mark/storage/Projects/dyndistcc/dyndistccserver$ nodejs dyndis
 # How To Actually Compile Something
 There are several ways of building with ```distcc```. The following describes *masquerading*.
 
-1. If you are not cross-compiling skip to step 2. If you are, create symlinks in ```/usr/lib/distcc``` that point to ```/bin/distcc``` and have the name of the cross-compile tools you are using. For example, if I was using ```arm-eabi-gcc```, I would run:  
+1. If you are not cross-compiling skip to step 2. If you are, create symlinks in ```/usr/lib/distcc``` that point to ```/bin/distcc``` and have the name of the cross-compile tools you are using. For example, if you were using ```arm-eabi-gcc```, you should run:  
 ```$ ln -s /bin/distcc /usr/lib/distcc/arm-eabi-gcc```. Be sure to create links to all tools used, including assemblers.
 2. *Prepend* the masquerade path to the system ```$PATH``` by running: ```$ export PATH=/usr/lib/distcc:$PATH```
 3. Call ```make``` as usual, except instead of maually entering a thread count with ```-jN```, use ```distcc```'s currently available core count by running: ```$ make -j $(distcc -j)```
