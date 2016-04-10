@@ -59,6 +59,7 @@ mark@volta:/media/mark/storage/Projects/dyndistcc/dyndistccserver$ nodejs dyndis
 
 # How To Actually Compile Something
 There are several ways of building with ```distcc```. The following describes *masquerading*.
+
 1. If you are not cross-compiling skip to step 2. If you are, create symlinks in ```/usr/lib/distcc``` that point to ```/bin/distcc``` and have the name of the cross-compile tools you are using. For example, if I was using ```arm-eabi-gcc```, I would run:  
 ```$ ln -s /bin/distcc /usr/lib/distcc/arm-eabi-gcc```. Be sure to create links to all tools used, including assemblers.
 2. *Prepend* the masquerade path to the system ```$PATH``` by running: ```$ export PATH=/usr/lib/distcc:$PATH```
