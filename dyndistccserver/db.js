@@ -135,10 +135,34 @@ function getHostList(projectID, hash, hosts, callback) {
     });
 }
 
+function getProjectList(callback) {
+    db.all("SELECT * FROM projects", function (err, rows) {
+        if (err) {
+            return;
+        }
+
+        callback(JSON.stringify(rows));
+    });
+}
+
+function getAllHosts(callback) {
+    db.all("SELECT * FROM hosts", function (err, rows) {
+        if (err) {
+            return;
+        }
+
+        callback(JSON.stringify(rows));
+    });
+}
+
 checkDBVersion();
 
 module.exports = {
     createProject: createProject,
     deleteProject: deleteProject,
-    doCheckin: doCheckin
+    doCheckin: doCheckin,
+    getProjectList: getProjectList,
+    getAllHosts: getAllHosts,
+    SW_VERSION: SW_VERSION,
+    DB_VERSION: DB_VERSION
 };

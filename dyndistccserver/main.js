@@ -22,7 +22,7 @@ http.createServer(function (request, response) {
         if (pathname.split("/").length < 3 || pathname.split("/")[2] == "") {
             console.log("Incomplete API request received");
             response.writeHead(400, {'Content-Type': 'text/plain'});
-            response.write("#400: Incomplete API request\n");
+            response.write("HTTP 400: Incomplete API request\n");
             response.write("127.0.0.1");
             response.end();
             return;
@@ -39,11 +39,7 @@ http.createServer(function (request, response) {
                     response.end();
                 });
             } else {
-                console.log("Bad checkin received");
-                response.writeHead(400, {'Content-Type': 'text/plain'});
-                response.write("#400: Bad checkin received\n");
-                response.write("127.0.0.1");
-                response.end();
+                returnError(response);
                 return;
             }
         } else if (command == "createProject") {
@@ -54,11 +50,7 @@ http.createServer(function (request, response) {
                     response.end();
                 });
             } else {
-                console.log("Bad project command received");
-                response.writeHead(400, {'Content-Type': 'text/plain'});
-                response.write("#400: Bad project command received\n");
-                response.write("127.0.0.1");
-                response.end();
+                returnError(response);
                 return;
             }
         } else if (command == "deleteProject") {
@@ -69,18 +61,25 @@ http.createServer(function (request, response) {
                     response.end();
                 });
             } else {
-                console.log("Bad project command received");
-                response.writeHead(400, {'Content-Type': 'text/plain'});
-                response.write("#400: Bad project command received\n");
-                response.write("127.0.0.1");
-                response.end();
+                returnError(response);
                 return;
             }
+        } else if (command == "getProjectList") {
+            db.getProjectList(function (rows) {
+                response.writeHead(200, {'Content-Type': 'text/plain'});
+                response.write(rows);
+                response.end();
+            });
+        } else if (command == "getAllHosts") {
+            db.getAllHosts(function (rows) {
+                response.writeHead(200, {'Content-Type': 'text/plain'});
+                response.write(rows);
+                response.end();
+            });
         } else {
             console.log("Unsupported API request received");
             response.writeHead(400, {'Content-Type': 'text/plain'});
-            response.write("#400: Unsupported API request\n");
-            response.write("127.0.0.1");
+            response.write("HTTP 400: Unsupported API request\n");
             response.end();
             return;
         }
@@ -91,7 +90,7 @@ http.createServer(function (request, response) {
             if (err) {
                 console.log(err);
                 response.writeHead(404, {'Content-Type': 'text/html'});
-                response.write("404: File not found");
+                response.write("HTTP 404: File not found");
             } else {
                 response.writeHead(200, {'Content-Type': 'text/html'});
                 response.write(data.toString());
@@ -101,4 +100,14 @@ http.createServer(function (request, response) {
     }
 }).listen(PORT);
 
-console.log('Server running at http://127.0.0.1:%s/', PORT);
+function returnError(response) {
+    console.log("Bad command received");
+    response.writeHead(400, {'Content-Type': 'text/plain'});
+    response.write("HTTP 400: Bad command received\n");
+    response.end();
+}
+
+console.log("dyndistcc Server Version " + db.SW_VERSION + ", DB Version " + db.DB_VERSION);
+console.log("Copyright 2016 Mark Furneaux, Romaco Canada");
+console.log("Running on HTTP port " + PORT);
+console.log("Ready to accept connections");

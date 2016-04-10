@@ -4,14 +4,26 @@
         <title>dyndistcc Commander</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="icon" type="image/x-icon" href="favicon.ico" /> 
+        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+        <style type="text/css">
+            table, th, td {
+                border: 1px solid #000000;
+            }
+        </style>
     </head>
     <body>
         <h1>dyndistcc Control Panel</h1>
-        <input type="text" id="projectName" name="projectName">
-        <input type="button" id="createProject" name="createProject" value="Create Project" onclick="createProject();">
-        <input type="button" id="deleteProject" name="deleteProject" value="Delete Project" onclick="deleteProject();">
-        <div id ="response" style="margin-top: 20px;"></div>
+        <div>
+            <h2>Project Management</h2>
+            <input type="text" id="projectName" name="projectName">
+            <input type="button" id="createProject" name="createProject" value="Create Project" onclick="createProject();">
+            <input type="button" id="deleteProject" name="deleteProject" value="Delete Project" onclick="deleteProject();">
+            <div id ="response" style="margin-top: 20px; min-height: 30px;"></div>
+        </div>
+        <h2>Project List</h2>
+        <table id="projectTable"></table>
+        <h2>Host List</h2>
+        <table id="hostTable"></table>
         <div style="position: absolute; bottom: 20px; right: 20px;">Copyright &copy; 2016 Mark Furneaux, Romaco Canada</div>
         <script type="text/javascript">
             function createProject() {
@@ -20,23 +32,65 @@
                     if (xhttp.readyState == 4 && xhttp.status == 200) {
                         document.getElementById("response").innerHTML = "Create status: " + xhttp.responseText;
                         document.getElementById("projectName").value = "";
+                        getProjectList();
                     }
                 };
                 xhttp.open("GET", "api/createProject?name=" + document.getElementById("projectName").value, true);
                 xhttp.send();
             }
-            
+
             function deleteProject() {
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (xhttp.readyState == 4 && xhttp.status == 200) {
                         document.getElementById("response").innerHTML = "Delete status: " + xhttp.responseText;
                         document.getElementById("projectName").value = "";
+                        getProjectList();
                     }
                 };
                 xhttp.open("GET", "api/deleteProject?name=" + document.getElementById("projectName").value, true);
                 xhttp.send();
             }
+
+            function getProjectList() {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (xhttp.readyState == 4 && xhttp.status == 200) {
+                        var out = "<tr><th>Project ID</th><th>Name</th></tr>";
+                        var data = JSON.parse(xhttp.responseText);
+                        for (var i = 0; i < data.length; i++) {
+                            out += "<tr><td>" + data[i].projectID + "</td><td>" + data[i].name + "</td></tr>";
+                        }
+                        document.getElementById("projectTable").innerHTML = out;
+                    }
+                };
+                xhttp.open("GET", "api/getProjectList", true);
+                xhttp.send();
+            }
+
+            function getAllHosts() {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (xhttp.readyState == 4 && xhttp.status == 200) {
+                        var out = "<tr><th>Host ID</th><th>Hash</th><th>IP Address</th><th>Project ID</th><th>Owner</th><th>Last Contact</th></tr>";
+                        var data = JSON.parse(xhttp.responseText);
+                        for (var i = 0; i < data.length; i++) {
+                            out += "<tr><td>" + data[i].hostID + "</td><td>" + data[i].hash + "</td><td>"
+                                    + data[i].ipAddr + "</td><td>" + data[i].projectID + "</td><td>"
+                                    + data[i].ownerName + "</td><td>";
+                            var d = new Date(data[i].lastContact);
+                            out += d.toString();
+                            out += "</td></tr>";
+                        }
+                        document.getElementById("hostTable").innerHTML = out;
+                    }
+                };
+                xhttp.open("GET", "api/getAllHosts", true);
+                xhttp.send();
+            }
+
+            getProjectList();
+            getAllHosts();
         </script>
     </body>
 </html>
