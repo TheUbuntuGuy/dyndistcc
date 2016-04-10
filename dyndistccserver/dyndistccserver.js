@@ -40,7 +40,7 @@ http.createServer(function (request, response) {
 
     if (reqType == API_PATH) {
         if (pathname.split("/").length < 3 || pathname.split("/")[2] == "") {
-            console.log("Incomplete API request received");
+            console.log("[ERROR]  Incomplete API request received");
             response.writeHead(400, {'Content-Type': 'text/plain'});
             response.write("HTTP 400: Incomplete API request\n");
             response.end();
@@ -48,11 +48,11 @@ http.createServer(function (request, response) {
         }
 
         var command = pathname.split("/")[2];
-        console.log("API request received: %s", command);
+        console.log("[INFO]  API request received: %s", command);
         if (command == "checkin") {
-            if (query.hash && query.project && query.username && query.swVersion) {
-                db.doCheckin(query.hash, query.project, query.username, request.connection.remoteAddress, query.swVersion, function (hosts) {
-                    console.log("Checkin from " + query.hash);
+            if (query.hash && query.project && query.username && query.swVersion && query.threads) {
+                console.log("[INFO]  Checkin from " + query.hash);
+                db.doCheckin(query.hash, query.project, query.username, request.connection.remoteAddress, query.swVersion, query.threads, function (hosts) {
                     response.writeHead(200, {'Content-Type': 'text/plain'});
                     response.write(hosts);
                     response.end();
@@ -96,7 +96,7 @@ http.createServer(function (request, response) {
                 response.end();
             });
         } else {
-            console.log("Unsupported API request received");
+            console.log("[ERROR]  Unsupported API request received");
             response.writeHead(400, {'Content-Type': 'text/plain'});
             response.write("HTTP 400: Unsupported API request\n");
             response.end();
@@ -105,9 +105,9 @@ http.createServer(function (request, response) {
     } else {
         // Read the requested interface files
         fs.readFile(HTML_PATH + pathname.substr(1), function (err, data) {
-            console.log("File request for " + HTML_PATH + pathname.substr(1) + " received");
+            console.log("[INFO]  File request for " + HTML_PATH + pathname.substr(1) + " received");
             if (err) {
-                console.log(err);
+                console.log("[ERROR]  Could not read requested file: " + err);
                 response.writeHead(404, {'Content-Type': 'text/html'});
                 response.write("HTTP 404: File not found");
             } else {
@@ -120,13 +120,13 @@ http.createServer(function (request, response) {
 }).listen(PORT);
 
 function returnError(response) {
-    console.log("Bad command received");
+    console.log("[ERROR]  Bad command received");
     response.writeHead(400, {'Content-Type': 'text/plain'});
     response.write("HTTP 400: Bad command received\n");
     response.end();
 }
 
-console.log("dyndistcc Server Version " + db.SW_VERSION + ", DB Version " + db.DB_VERSION);
-console.log("Copyright 2016 Mark Furneaux, Romaco Canada");
-console.log("Running on HTTP port " + PORT);
-console.log("Ready to accept connections");
+console.log("[SYS]  dyndistcc Server Version " + db.SW_VERSION + ", DB Version " + db.DB_VERSION);
+console.log("[SYS]  Copyright 2016 Mark Furneaux, Romaco Canada");
+console.log("[SYS]  Running on HTTP port " + PORT);
+console.log("[SYS]  Ready to accept connections");

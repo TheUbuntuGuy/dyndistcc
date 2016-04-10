@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>dyndistcc Commander</title>
+        <title>dyndistcc Control Panel</title>
         <meta charset="UTF-8">
         <meta name="author" content="Mark Furneaux">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,11 +76,11 @@
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (xhttp.readyState == 4 && xhttp.status == 200) {
-                        var out = "<tr><th>Host ID</th><th>Hash</th><th>IP Address</th><th>Project ID</th><th>Owner</th><th>Last Contact</th><th>Client SW Version</th></tr>";
+                        var out = "<tr><th>Host ID</th><th>Hash</th><th>IP Address</th><th>Threads</th><th>Project ID</th><th>Owner</th><th>Last Contact</th><th>Client SW Version</th></tr>";
                         var data = JSON.parse(xhttp.responseText);
                         for (var i = 0; i < data.length; i++) {
                             out += "<tr><td>" + data[i].hostID + "</td><td>" + data[i].hash + "</td><td>"
-                                    + data[i].ipAddr + "</td><td>" + data[i].projectID + "</td><td>"
+                                    + data[i].ipAddr + "</td><td>" + data[i].threads + "</td><td>" + data[i].projectID + "</td><td>"
                                     + data[i].ownerName + "</td><td>";
                             var d = new Date(data[i].lastContact);
                             out += d.toString();

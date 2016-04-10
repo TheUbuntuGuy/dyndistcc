@@ -64,7 +64,8 @@ function installScript ()
     echo "CLIENTHASH=\"$clientHash\"" >> $SCRIPTFILE
     echo "USERNAME=\"$userName\"" >> $SCRIPTFILE
     cat >> $SCRIPTFILE << ENDOFSCRIPT
-wget -o /dev/null -O "$DISTCCHOSTS" "http://\$SERVERADDRESS:\$PORTNUMBER/api/checkin?hash=\$CLIENTHASH&project=\$PROJECTNAME&username=\$USERNAME&swVersion=\$SWVERSION"
+THREADS=\$(nproc)
+wget -o /dev/null -O "$DISTCCHOSTS" "http://\$SERVERADDRESS:\$PORTNUMBER/api/checkin?hash=\$CLIENTHASH&project=\$PROJECTNAME&username=\$USERNAME&swVersion=\$SWVERSION&threads=\$THREADS"
 ENDOFSCRIPT
 
     chmod +x $SCRIPTFILE
@@ -82,7 +83,7 @@ function askQuestions ()
         echo "Using port 33333."
         portNum=33333
     fi
-    read -p "What network segment should we listen on (CIDR notation): " netSegment
+    read -p "What network segment should we listen on (CIDR notation, eg. 192.168.30.0/24): " netSegment
     if [ -z "$netSegment" ]; then
         echo "Empty segment name. Aborting installation."
         exit 2
@@ -114,7 +115,7 @@ function doInstall ()
         echo ""
         echo ""
     else
-        echo "Dependencies already installed. Skipping..."
+        echo "Dependencies already satisfied. Skipping..."
     fi
 
     if [ $(which distcc | wc -l) -lt 1 ]; then
