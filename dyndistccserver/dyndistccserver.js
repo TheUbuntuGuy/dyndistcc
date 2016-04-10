@@ -31,8 +31,8 @@ http.createServer(function (request, response) {
         var command = pathname.split("/")[2];
         console.log("API request received: %s", command);
         if (command == "checkin") {
-            if (query.hash && query.project && query.username) {
-                db.doCheckin(query.hash, query.project, query.username, request.connection.remoteAddress, function (hosts) {
+            if (query.hash && query.project && query.username && query.swVersion) {
+                db.doCheckin(query.hash, query.project, query.username, request.connection.remoteAddress, query.swVersion, function (hosts) {
                     console.log("Checkin from " + query.hash);
                     response.writeHead(200, {'Content-Type': 'text/plain'});
                     response.write(hosts);

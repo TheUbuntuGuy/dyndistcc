@@ -75,7 +75,7 @@
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (xhttp.readyState == 4 && xhttp.status == 200) {
-                        var out = "<tr><th>Host ID</th><th>Hash</th><th>IP Address</th><th>Project ID</th><th>Owner</th><th>Last Contact</th></tr>";
+                        var out = "<tr><th>Host ID</th><th>Hash</th><th>IP Address</th><th>Project ID</th><th>Owner</th><th>Last Contact</th><th>Client SW Version</th></tr>";
                         var data = JSON.parse(xhttp.responseText);
                         for (var i = 0; i < data.length; i++) {
                             out += "<tr><td>" + data[i].hostID + "</td><td>" + data[i].hash + "</td><td>"
@@ -83,7 +83,7 @@
                                     + data[i].ownerName + "</td><td>";
                             var d = new Date(data[i].lastContact);
                             out += d.toString();
-                            out += "</td></tr>";
+                            out += "</td><td>" + data[i].swVersion + "</td></tr>";
                         }
                         document.getElementById("hostTable").innerHTML = out;
                     }

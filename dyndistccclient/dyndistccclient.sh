@@ -34,6 +34,7 @@ function installScript ()
     clientHash=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 
     echo "#!/bin/bash" >> $SCRIPTFILE
+    echo "SWVERSION=$VERSION" >> $SCRIPTFILE
     echo "SERVERADDRESS=$serverAddr" >> $SCRIPTFILE
     echo "PORTNUMBER=$portNum" >> $SCRIPTFILE
     echo "PROJECTNAME=$projectName" >> $SCRIPTFILE
@@ -41,7 +42,7 @@ function installScript ()
     echo "CLIENTHASH=$clientHash" >> $SCRIPTFILE
     echo "USERNAME=$userName" >> $SCRIPTFILE
     cat >> $SCRIPTFILE << ENDOFSCRIPT
-wget -O "$DISTCCHOSTS" "http://$SERVERADDRESS:$PORTNUMBER/api/checkin?hash=$CLIENTHASH&project=$PROJECTNAME&username=$USERNAME"
+wget -O "$DISTCCHOSTS" "http://$SERVERADDRESS:$PORTNUMBER/api/checkin?hash=$CLIENTHASH&project=$PROJECTNAME&username=$USERNAME&swVersion=$SWVERSION"
 ENDOFSCRIPT
 
     chmod +x $SCRIPTFILE

@@ -6,14 +6,15 @@ var sqlite3 = require("sqlite3").verbose();
 var db = new sqlite3.Database(file);
 
 var SW_VERSION = "0.0.1";
-var DB_VERSION = 2;
+var DB_VERSION = 3;
 
 db.serialize(function () {
     if (!exists) {
         console.log("Creating DB...");
         db.run("CREATE TABLE dyndistcc (version TEXT, dbVersion INTEGER)");
         db.run("CREATE TABLE projects (projectID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)");
-        db.run("CREATE TABLE hosts (hostID INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT UNIQUE, ipAddr TEXT, projectID INTEGER, ownerName TEXT, lastContact NUMERIC)");
+        db.run("CREATE TABLE hosts (hostID INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "hash TEXT UNIQUE, ipAddr TEXT, projectID INTEGER, ownerName TEXT, lastContact NUMERIC, swVersion TEXT)");
 
         db.run("INSERT INTO dyndistcc (version, dbVersion) VALUES (?, ?)", SW_VERSION, DB_VERSION);
     }
@@ -44,6 +45,9 @@ function doUpgradeDB(fromVers) {
             case 2:
                 db.run("ALTER TABLE hosts ADD COLUMN hash TEXT");
                 db.run("UPDATE dyndistcc SET dbVersion=?, version=? WHERE 1", 2, SW_VERSION);
+            case 3:
+                db.run("ALTER TABLE hosts ADD COLUMN swVersion TEXT");
+                db.run("UPDATE dyndistcc SET dbVersion=?, version=? WHERE 1", 3, SW_VERSION);
         }
         console.log("DB upgraded successfully");
     });
@@ -84,7 +88,7 @@ function deleteProject(name, callback) {
     });
 }
 
-function doCheckin(hash, project, name, ip, callback) {
+function doCheckin(hash, project, name, ip, swVersion, callback) {
     var hosts = "127.0.0.1";
     var date = new Date();
 
@@ -106,16 +110,16 @@ function doCheckin(hash, project, name, ip, callback) {
                 }
                 if (typeof row == "undefined") {
                     //host has never checked in
-                    db.run("INSERT INTO hosts (hash, ipAddr, projectID, ownerName, lastContact) VALUES(?, ?, ?, ?, ?)",
-                            hash, ip, projectID, name, date.getTime(), function (err) {
+                    db.run("INSERT INTO hosts (hash, ipAddr, projectID, ownerName, lastContact, swVersion) VALUES(?, ?, ?, ?, ?, ?)",
+                            hash, ip, projectID, name, date.getTime(), swVersion, function (err) {
                         if (err) {
                             callback(hosts);
                         }
                         getHostList(projectID, hash, hosts, callback);
                     });
                 } else {
-                    db.run("UPDATE hosts SET lastContact=?, ipAddr=? WHERE hash=?",
-                            date.getTime(), ip, hash, function (err) {
+                    db.run("UPDATE hosts SET lastContact=?, ipAddr=?, swVersion=? WHERE hash=?",
+                            date.getTime(), ip, swVersion, hash, function (err) {
                         if (err) {
                             callback(hosts);
                         }
