@@ -65,13 +65,20 @@ function createProject(name, callback) {
 
 function deleteProject(name, callback) {
     db.serialize(function () {
-        db.run("DELETE FROM projects WHERE name=?", name, function (err) {
+        db.run("DELETE FROM hosts WHERE projectID IN (SELECT projectID FROM projects WHERE name=?)", name, function (err) {
             if (err) {
                 console.log("Error deleting project: " + err);
                 callback("fail");
             } else {
-                console.log("Deleted project: \"" + name + "\"");
-                callback("success");
+                db.run("DELETE FROM projects WHERE name=?", name, function (err) {
+                    if (err) {
+                        console.log("Error deleting project: " + err);
+                        callback("fail");
+                    } else {
+                        console.log("Deleted project: \"" + name + "\"");
+                        callback("success");
+                    }
+                });
             }
         });
     });
@@ -85,6 +92,7 @@ function doCheckin(hash, project, name, ip, callback) {
         db.get("SELECT * FROM projects WHERE name=?", project, function (err, row) {
             //project has not been setup on server
             if (err || typeof row == "undefined") {
+                console.log("Checkin for undefined project: \"" + project + "\"");
                 callback(hosts);
                 return;
             }
