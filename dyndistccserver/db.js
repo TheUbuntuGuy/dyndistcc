@@ -1,3 +1,23 @@
+/*
+ * dyndistcc DB Manager
+ * Copyright 2016 Mark Furneaux, Romaco Canada
+ * 
+ * This file is part of dyndistcc.
+ * 
+ * dyndistcc is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * dyndistcc is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with dyndistcc.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 var fs = require("fs");
 var file = "dyndistcc.db";
 var exists = fs.existsSync(file);
@@ -9,6 +29,7 @@ var SW_VERSION = "0.0.1";
 var DB_VERSION = 3;
 
 db.serialize(function () {
+    // Create the database on the first run
     if (!exists) {
         console.log("Creating DB...");
         db.run("CREATE TABLE dyndistcc (version TEXT, dbVersion INTEGER)");
@@ -24,7 +45,7 @@ function checkDBVersion() {
     db.serialize(function () {
         db.get("SELECT * FROM dyndistcc", function (err, row) {
             if (err) {
-                console.log(err);
+                console.log("Error checking DB version: " + err);
             }
             if (row.dbVersion < DB_VERSION) {
                 console.log("DB must be upgraded from version " + row.dbVersion + " to " + DB_VERSION);
@@ -36,8 +57,8 @@ function checkDBVersion() {
 
 function doUpgradeDB(fromVers) {
     console.log("Upgrading DB...");
-    //intentional fall through for full upgrade
-    //each case is the version the change was added in
+    // Intentional fall through for full incremental upgrade
+    // Each case is the version the change was added in
     db.serialize(function () {
         switch (fromVers + 1) {
             case 1:
@@ -69,6 +90,7 @@ function createProject(name, callback) {
 
 function deleteProject(name, callback) {
     db.serialize(function () {
+        // Delete all hosts associated with the project first
         db.run("DELETE FROM hosts WHERE projectID IN (SELECT projectID FROM projects WHERE name=?)", name, function (err) {
             if (err) {
                 console.log("Error deleting project: " + err);
@@ -89,12 +111,13 @@ function deleteProject(name, callback) {
 }
 
 function doCheckin(hash, project, name, ip, swVersion, callback) {
+    // Always return localhost as the first host, even in an error scenario
     var hosts = "127.0.0.1";
     var date = new Date();
 
     db.serialize(function () {
         db.get("SELECT * FROM projects WHERE name=?", project, function (err, row) {
-            //project has not been setup on server
+            // Project has not been setup on server
             if (err || typeof row == "undefined") {
                 console.log("Checkin for undefined project: \"" + project + "\"");
                 callback(hosts);
@@ -109,7 +132,7 @@ function doCheckin(hash, project, name, ip, swVersion, callback) {
                     return;
                 }
                 if (typeof row == "undefined") {
-                    //host has never checked in
+                    // Host has never checked in
                     db.run("INSERT INTO hosts (hash, ipAddr, projectID, ownerName, lastContact, swVersion) VALUES(?, ?, ?, ?, ?, ?)",
                             hash, ip, projectID, name, date.getTime(), swVersion, function (err) {
                         if (err) {
@@ -152,7 +175,6 @@ function getProjectList(callback) {
         if (err) {
             return;
         }
-
         callback(JSON.stringify(rows));
     });
 }
@@ -162,7 +184,6 @@ function getAllHosts(callback) {
         if (err) {
             return;
         }
-
         callback(JSON.stringify(rows));
     });
 }

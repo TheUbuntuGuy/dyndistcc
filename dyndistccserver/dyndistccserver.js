@@ -1,3 +1,23 @@
+/*
+ * dyndistcc HTTP Server
+ * Copyright 2016 Mark Furneaux, Romaco Canada
+ * 
+ * This file is part of dyndistcc.
+ * 
+ * dyndistcc is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * dyndistcc is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with dyndistcc.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
@@ -11,7 +31,7 @@ http.createServer(function (request, response) {
     var pathname = url.parse(request.url).pathname;
     var query = url.parse(request.url, true).query;
 
-    //default landing page
+    // Default landing page
     if (pathname == "/") {
         pathname = "/index.html";
     }
@@ -23,7 +43,6 @@ http.createServer(function (request, response) {
             console.log("Incomplete API request received");
             response.writeHead(400, {'Content-Type': 'text/plain'});
             response.write("HTTP 400: Incomplete API request\n");
-            response.write("127.0.0.1");
             response.end();
             return;
         }
@@ -84,7 +103,7 @@ http.createServer(function (request, response) {
             return;
         }
     } else {
-        //read the requested interface file
+        // Read the requested interface files
         fs.readFile(HTML_PATH + pathname.substr(1), function (err, data) {
             console.log("File request for " + HTML_PATH + pathname.substr(1) + " received");
             if (err) {

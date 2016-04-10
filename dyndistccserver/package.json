@@ -4,9 +4,10 @@
     "keywords": ["server", "client", "browser"],
     "author": "Mark Furneaux",
     "contributors": [],
-    "dependencies": {"sqlite3": "~3.1.3"},
+    "dependencies": {
+        "sqlite3": "~3.1.3"
+    },
     "scripts": {
         "start": "node dyndistccserver.js"
     }
-
 }

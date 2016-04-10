@@ -1,4 +1,22 @@
 #!/bin/bash
+#
+# dyndistcc Client Install Script
+# Copyright 2016 Mark Furneaux, Romaco Canada
+#
+# This file is part of dyndistcc.
+#
+# dyndistcc is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# dyndistcc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with dyndistcc.  If not, see <http://www.gnu.org/licenses/>.
 
 VERSION="0.0.1"
 SCRIPTFILE="/usr/local/bin/dyndistccsync"
@@ -23,16 +41,20 @@ function printHelp ()
     echo "Usage: $scriptName <command>"
     echo ""
     echo "Commands:"
-    echo "  install     Install and configure dyndistcc client"
-    echo "  uninstall   Remove dyndistcc client"
+    echo "  install         Install and configure dyndistcc client"
+    echo "  uninstall       Remove dyndistcc client"
+    echo "  -h or --help    Print this help and exit"
+    echo "  -v              Print the script version and exit"
     echo ""
     printRoot
 }
 
 function installScript ()
 {
+    # Generate a random hash to identify this machine in all future checkins with the server
     clientHash=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 
+    # Build the checkin script with all the arguments from the installer
     echo "#!/bin/bash" >> $SCRIPTFILE
     echo "SWVERSION=$VERSION" >> $SCRIPTFILE
     echo "SERVERADDRESS=$serverAddr" >> $SCRIPTFILE
@@ -104,6 +126,7 @@ function doInstall ()
         echo "distcc is already installed..."
     fi
 
+    # Listener is empty to force all interfaces
     echo "Configuring distcc..."
     cp $DISTCCCONF "$DISTCCCONF.bak"
     sed -i "/^[^#]*STARTDISTCC=*/c\STARTDISTCC=\"true\"" $DISTCCCONF
@@ -121,12 +144,13 @@ function doInstall ()
         echo "MAILTO=\"\"" >> $CRONTMP
     fi
 
+    # The magic comment is used by the uninstaller
     echo "* * * * * $SCRIPTFILE #dyndistccAutoRemove" >> $CRONTMP
     crontab $CRONTMP
     rm $CRONTMP
 
     echo "Starting distcc..."
-    #service distcc restart
+    service distcc restart
 
     if [ $? -eq 0 ]; then
         echo ""
@@ -173,6 +197,9 @@ else
             ;;
         "-h")
             printHelp
+            ;;
+        "-v")
+            printVersion
             ;;
         "--help")
             printHelp
