@@ -12,6 +12,9 @@ Client computers are configured as part of a 'project'. They periodically send a
 Multiple projects can be concurrently running on the same network, and clients within a project do not need to be the same speed or have the same number of threads. Projects can be managed via a simple web interface provided by the server.  
 ```dyndistcc``` enables a more effective use of total computing resources. It is unlikely that every developer will be using 100% of their workstation's compute capacity all the time, and sharing the extra resources with the team improves productivity. By running ```distcc``` with a positive nice value, the impact on other developers is minimal.
 
+# Why Plain distcc Falls Short
+```distcc``` normally requires manually configured hosts. If you have a network where IP addresses are assigned by a DHCP server, they can change and that will repeatedly break your configuration. As hosts are added and removed, every other host must be manually updated. ```distcc``` does not intrinsically know the number of threads each host is capable of, and will often assume far fewer cores than the machine truly has. ```distcc``` has support for zeroconf, however it cannot be partitioned on the same network, so if you have multiple teams, you cannot restrict the hosts that are used. ```dyndistcc``` solves all these shortcomings and enables a more effective use of total computing resources.
+
 # Installation
 Installing ```dyndistcc``` is easy. The server is a small node.js application, and the client is a self-contained, self-installing bash script.
 ## Server
@@ -54,7 +57,11 @@ mark@volta:/media/mark/storage/Projects/dyndistcc/dyndistccserver$ nodejs dyndis
 [INFO]  File request for html/favicon.ico received
 ```
 
-# Why Plain distcc Falls Short
-```distcc``` normally requires manually configured hosts. If you have a network where IP addresses are assigned by a DHCP server, they can change and that will repeatedly break your configuration. As hosts are added and removed, every other host must be manually updated. ```distcc``` does not intrinsically know the number of threads each host is capable of, and will often assume far fewer cores than the machine truly has. ```distcc``` has support for zeroconf, however it cannot be partitioned on the same network, so if you have multiple teams, you cannot restrict the hosts that are used. ```dyndistcc``` solves all these shortcomings and enables a more effective use of total computing resources.
+# How To Actually Compile Something
+There are several ways of building with ```distcc```. The following describes *masquerading*.
+1. If you are not cross-compiling skip to step 2. If you are, create symlinks in ```/usr/lib/distcc``` that point to ```/bin/distcc``` and have the name of the cross-compile tools you are using. For example, if I was using ```arm-eabi-gcc```, I would run:  
+```$ ln -s /bin/distcc /usr/lib/distcc/arm-eabi-gcc```. Be sure to create links to all tools used, including assemblers.
+2. *Prepend* the masquerade path to the system ```$PATH``` by running: ```$ export PATH=/usr/lib/distcc:$PATH```
+3. Call ```make``` as usual, except instead of maually entering a thread count with ```-jN```, use ```distcc```'s currently available core count by running: ```$ make -j $(distcc -j)```
 
-
+Step 1 is only done once, and normally you would incorporate steps 2 and 3 into a Makefile such that you don't normally need to run them.
