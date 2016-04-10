@@ -7,11 +7,6 @@ var PORT = 33333;
 var HTML_PATH = "html/";
 var API_PATH = "api";
 
-//debug
-db.createProject("testproj", function () {
-
-});
-
 http.createServer(function (request, response) {
     var pathname = url.parse(request.url).pathname;
     var query = url.parse(request.url, true).query;
@@ -90,24 +85,19 @@ http.createServer(function (request, response) {
             return;
         }
     } else {
-        if (pathname.substr(1) == "favicon.ico") {
-            response.writeHead(404, {'Content-Type': 'text/html'});
-            response.write("404: File not found");
-        } else {
-            //read the requested interface file
-            fs.readFile(HTML_PATH + pathname.substr(1), function (err, data) {
-                console.log("File request for " + HTML_PATH + pathname.substr(1) + " received");
-                if (err) {
-                    console.log(err);
-                    response.writeHead(404, {'Content-Type': 'text/html'});
-                    response.write("404: File not found");
-                } else {
-                    response.writeHead(200, {'Content-Type': 'text/html'});
-                    response.write(data.toString());
-                }
-                response.end();
-            });
-        }
+        //read the requested interface file
+        fs.readFile(HTML_PATH + pathname.substr(1), function (err, data) {
+            console.log("File request for " + HTML_PATH + pathname.substr(1) + " received");
+            if (err) {
+                console.log(err);
+                response.writeHead(404, {'Content-Type': 'text/html'});
+                response.write("404: File not found");
+            } else {
+                response.writeHead(200, {'Content-Type': 'text/html'});
+                response.write(data.toString());
+            }
+            response.end();
+        });
     }
 }).listen(PORT);
 

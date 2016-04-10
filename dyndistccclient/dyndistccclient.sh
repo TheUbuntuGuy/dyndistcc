@@ -7,7 +7,7 @@ DISTCCHOSTS="/etc/distcc/hosts"
 
 function printVersion ()
 {
-    echo "dyndistcc Version $VERSION"
+    echo "dyndistcc Client Version $VERSION"
     echo "Copyright 2016 Mark Furneaux, Romaco Canada"
 }
 
@@ -153,7 +153,6 @@ function doUninstall ()
     echo ""
     echo "Uninstall complete."
 }
-
 
 if [ $# -ne 1 ]; then
     printHelp

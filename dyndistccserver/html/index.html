@@ -4,8 +4,39 @@
         <title>dyndistcc Commander</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" type="image/x-icon" href="favicon.ico" /> 
     </head>
     <body>
-        <div>TODO everything</div>
+        <h1>dyndistcc Control Panel</h1>
+        <input type="text" id="projectName" name="projectName">
+        <input type="button" id="createProject" name="createProject" value="Create Project" onclick="createProject();">
+        <input type="button" id="deleteProject" name="deleteProject" value="Delete Project" onclick="deleteProject();">
+        <div id ="response" style="margin-top: 20px;"></div>
+        <div style="position: absolute; bottom: 20px; right: 20px;">Copyright &copy; 2016 Mark Furneaux, Romaco Canada</div>
+        <script type="text/javascript">
+            function createProject() {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (xhttp.readyState == 4 && xhttp.status == 200) {
+                        document.getElementById("response").innerHTML = "Create status: " + xhttp.responseText;
+                        document.getElementById("projectName").value = "";
+                    }
+                };
+                xhttp.open("GET", "api/createProject?name=" + document.getElementById("projectName").value, true);
+                xhttp.send();
+            }
+            
+            function deleteProject() {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (xhttp.readyState == 4 && xhttp.status == 200) {
+                        document.getElementById("response").innerHTML = "Delete status: " + xhttp.responseText;
+                        document.getElementById("projectName").value = "";
+                    }
+                };
+                xhttp.open("GET", "api/deleteProject?name=" + document.getElementById("projectName").value, true);
+                xhttp.send();
+            }
+        </script>
     </body>
 </html>
