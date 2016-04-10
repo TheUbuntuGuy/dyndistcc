@@ -3,6 +3,7 @@
     "version": "0.0.1",
     "keywords": ["server", "client", "browser"],
     "author": "Mark Furneaux",
+    "description": "The server for dyndistcc which distributes active compile nodes to clients as they checkin.",
     "contributors": [],
     "dependencies": {
         "sqlite3": "~3.1.3"

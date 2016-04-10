@@ -56,15 +56,15 @@ function installScript ()
 
     # Build the checkin script with all the arguments from the installer
     echo "#!/bin/bash" >> $SCRIPTFILE
-    echo "SWVERSION=$VERSION" >> $SCRIPTFILE
-    echo "SERVERADDRESS=$serverAddr" >> $SCRIPTFILE
+    echo "SWVERSION=\"$VERSION\"" >> $SCRIPTFILE
+    echo "SERVERADDRESS=\"$serverAddr\"" >> $SCRIPTFILE
     echo "PORTNUMBER=$portNum" >> $SCRIPTFILE
-    echo "PROJECTNAME=$projectName" >> $SCRIPTFILE
-    echo "DISTCCHOSTS=$DISTCCHOSTS" >> $SCRIPTFILE
-    echo "CLIENTHASH=$clientHash" >> $SCRIPTFILE
-    echo "USERNAME=$userName" >> $SCRIPTFILE
+    echo "PROJECTNAME=\"$projectName\"" >> $SCRIPTFILE
+    echo "DISTCCHOSTS=\"$DISTCCHOSTS\"" >> $SCRIPTFILE
+    echo "CLIENTHASH=\"$clientHash\"" >> $SCRIPTFILE
+    echo "USERNAME=\"$userName\"" >> $SCRIPTFILE
     cat >> $SCRIPTFILE << ENDOFSCRIPT
-wget -O "$DISTCCHOSTS" "http://$SERVERADDRESS:$PORTNUMBER/api/checkin?hash=$CLIENTHASH&project=$PROJECTNAME&username=$USERNAME&swVersion=$SWVERSION"
+wget -o /dev/null -O "$DISTCCHOSTS" "http://\$SERVERADDRESS:\$PORTNUMBER/api/checkin?hash=\$CLIENTHASH&project=\$PROJECTNAME&username=\$USERNAME&swVersion=\$SWVERSION"
 ENDOFSCRIPT
 
     chmod +x $SCRIPTFILE
@@ -80,7 +80,7 @@ function askQuestions ()
     read -p "What is the port of the controller [33333]: " portNum
     if [ -z "$portNum" ]; then
         echo "Using port 33333."
-        portNum=10
+        portNum=33333
     fi
     read -p "What network segment should we listen on (CIDR notation): " netSegment
     if [ -z "$netSegment" ]; then
@@ -153,6 +153,8 @@ function doInstall ()
     service distcc restart
 
     if [ $? -eq 0 ]; then
+        echo "Checking in with the server..."
+        $SCRIPTFILE > /dev/null 2>&1 
         echo ""
         SUCCESSMSG="dyndistcc is now running for the $projectName project on the $netSegment network."
         if [ -e "/usr/games/cowsay" ]; then
@@ -175,6 +177,8 @@ function doUninstall ()
     rm $SCRIPTFILE
     echo "Reverting distcc settings..."
     cp "$DISTCCCONF.bak" $DISTCCCONF
+    echo "Stopping distcc..."
+    service distcc stop
     echo ""
     echo "Uninstall complete."
 }
