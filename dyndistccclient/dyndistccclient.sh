@@ -73,7 +73,8 @@ function installScript ()
     echo "USERNAME=\"$userName\"" >> $SCRIPTFILE
     cat >> $SCRIPTFILE << ENDOFSCRIPT
 THREADS=\$(nproc)
-wget -o /dev/null -O "$DISTCCHOSTS" "http://\$SERVERADDRESS:\$PORTNUMBER/api/checkin?hash=\$CLIENTHASH&project=\$PROJECTNAME&username=\$USERNAME&swVersion=\$SWVERSION&threads=\$THREADS"
+wget -o /dev/null -O "$DISTCCHOSTS.tmp" "http://\$SERVERADDRESS:\$PORTNUMBER/api/checkin?hash=\$CLIENTHASH&project=\$PROJECTNAME&username=\$USERNAME&swVersion=\$SWVERSION&threads=\$THREADS"
+mv "$DISTCCHOSTS.tmp" "$DISTCCHOSTS"
 ENDOFSCRIPT
 
     chmod +x $SCRIPTFILE
@@ -81,7 +82,8 @@ ENDOFSCRIPT
 
 function askQuestions ()
 {
-    read -p "What is the domain/IP address of the controller: " serverAddr
+    echo "If this host is also running the controller, you must use the public IP address here."
+    read -p "What is the hostname/IP address of the controller: " serverAddr
     if [ -z "$serverAddr" ]; then
         echo "Empty server address. Aborting installation."
         exit 2
@@ -140,7 +142,7 @@ function doInstall ()
     cp $DISTCCCONF "$DISTCCCONF.bak"
     sed -i "/^[^#]*STARTDISTCC=*/c\STARTDISTCC=\"true\"" $DISTCCCONF
     sed -i "/^[^#]*LISTENER=*/c\LISTENER=\"\"" $DISTCCCONF
-    sed -i "/^[^#]*ALLOWEDNETS=*/c\ALLOWEDNETS=\"$netSegment\"" $DISTCCCONF
+    sed -i "/^[^#]*ALLOWEDNETS=*/c\ALLOWEDNETS=\"127.0.0.1 $netSegment\"" $DISTCCCONF
     sed -i "/^[^#]*NICE=*/c\NICE=\"$niceValue\"" $DISTCCCONF
 
     echo "Installing scripts..."
