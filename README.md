@@ -3,7 +3,7 @@
 ```dyndistcc``` is a simple addon system for dynamically distributing compile jobs to a pool of potentially changing clients.
 
 # Simple Use Case
-Lets say you and your team of 5 are working on a software project compiled with ```gcc```. Each developer can compile their code on their local workstation with, lets say, 4 cores. That's fine and all, but we want to go faster, and cannot afford new beast workstations.  
+Lets say you and your team of 5 are working on a software project compiled with ```gcc```. Each developer can compile their code on their local workstation with, lets say, 4 cores. That's fine and all, but we want to go faster, without upgrading our workstations.  
 However with ```dyndistcc``` installed, when each developer starts a compile, the job will be compiled in parallel with all the cores of all the workstations in that team. In this example, that's ```5 workstations * 4 cores = 20 cores```; which results in a nearly **5x** speed improvement.
 
 # How It Works

@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with dyndistcc.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION="0.0.1"
+VERSION="0.0.3"
 SCRIPTFILE="/usr/local/bin/dyndistccsync"
 DISTCCCONF="/etc/default/distcc"
 DISTCCHOSTS="/etc/distcc/hosts"

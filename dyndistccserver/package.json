@@ -1,6 +1,6 @@
 {
     "name": "dyndistccserver",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "keywords": ["server", "client", "browser"],
     "author": "Mark Furneaux",
     "description": "The server for dyndistcc which distributes active compile nodes to clients as they checkin.",
