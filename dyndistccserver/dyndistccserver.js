@@ -52,13 +52,13 @@ http.createServer(function (request, response) {
         if (command == "checkin") {
             if (query.hash && query.project && query.username && query.swVersion && query.threads) {
                 console.log("[INFO]  Checkin from " + query.hash);
-                
+
                 //do not accept checkins from localhost, as they will cause problems
                 if (request.connection.remoteAddress == "127.0.0.1") {
                     console.log("[WARN]  Checkins from localhost are not supported. Use the public IP address instead");
                     returnError(response);
                 }
-                
+
                 db.doCheckin(query.hash, query.project, query.username, request.connection.remoteAddress, query.swVersion, query.threads, function (hosts) {
                     response.writeHead(200, {'Content-Type': 'text/plain'});
                     response.write(hosts);
@@ -102,6 +102,17 @@ http.createServer(function (request, response) {
                 response.write(rows);
                 response.end();
             });
+        } else if (command == "deleteHost") {
+            if (query.hash) {
+                db.deleteHost(query.hash, function (rows) {
+                    response.writeHead(200, {'Content-Type': 'text/plain'});
+                    response.write(rows);
+                    response.end();
+                });
+            } else {
+                returnError(response);
+                return;
+            }
         } else {
             console.log("[ERROR]  Unsupported API request received");
             response.writeHead(400, {'Content-Type': 'text/plain'});

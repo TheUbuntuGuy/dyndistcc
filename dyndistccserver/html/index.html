@@ -29,6 +29,11 @@
             Copyright &copy; 2016 Mark Furneaux, Romaco Canada</div>
         <script type="text/javascript">
             function createProject() {
+                if (document.getElementById("projectName").value == "") {
+                    alert("The project name cannot be blank");
+                    return;
+                }
+
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -43,6 +48,11 @@
             }
 
             function deleteProject() {
+                if (document.getElementById("projectName").value == "") {
+                    alert("The project name cannot be blank");
+                    return;
+                }
+                
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -76,7 +86,7 @@
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (xhttp.readyState == 4 && xhttp.status == 200) {
-                        var out = "<tr><th>Host ID</th><th>Hash</th><th>IP Address</th><th>Threads</th><th>Project ID</th><th>Owner</th><th>Last Contact</th><th>Client SW Version</th></tr>";
+                        var out = "<tr><th>Host ID</th><th>Hash</th><th>IP Address</th><th>Threads</th><th>Project ID</th><th>Owner</th><th>Last Contact</th><th>Client SW Version</th><th>Expunge Host</th></tr>";
                         var data = JSON.parse(xhttp.responseText);
                         for (var i = 0; i < data.length; i++) {
                             out += "<tr><td>" + data[i].hostID + "</td><td>" + data[i].hash + "</td><td>"
@@ -84,12 +94,24 @@
                                     + data[i].ownerName + "</td><td>";
                             var d = new Date(data[i].lastContact);
                             out += d.toString();
-                            out += "</td><td>" + data[i].swVersion + "</td></tr>";
+                            out += "</td><td>" + data[i].swVersion + "</td>";
+                            out += "<td><input type=\"button\" value=\"Expunge Host\" onclick=\"deleteHost('" + data[i].hash + "');\"></td></tr>";
                         }
                         document.getElementById("hostTable").innerHTML = out;
                     }
                 };
                 xhttp.open("GET", "api/getAllHosts", true);
+                xhttp.send();
+            }
+
+            function deleteHost(hash) {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (xhttp.readyState == 4 && xhttp.status == 200) {
+                        getAllHosts();
+                    }
+                };
+                xhttp.open("GET", "api/deleteHost?hash=" + hash, true);
                 xhttp.send();
             }
 

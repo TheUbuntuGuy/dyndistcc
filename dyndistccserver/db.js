@@ -114,6 +114,18 @@ function deleteProject(name, callback) {
     });
 }
 
+function deleteHost(hash, callback) {
+    db.run("DELETE FROM hosts WHERE hash=?", hash, function (err) {
+        if (err) {
+            console.log("[ERROR]  Error deleting host: " + err);
+            callback("fail");
+        } else {
+            console.log("[INFO]  Deleted host: \"" + hash + "\"");
+            callback("success");
+        }
+    });
+}
+
 function doCheckin(hash, project, name, ip, swVersion, threads, callback) {
     // Always return localhost as the first host, even in an error scenario
     var hosts = "127.0.0.1/4";
@@ -170,7 +182,7 @@ function getHostList(projectID, hash, hosts, callback) {
             hosts += " " + rows[i].ipAddr + "/" + rows[i].threads;
             totalThreads += rows[i].threads;
         }
-        console.log("[INFO]  Distributing " + totalThreads + " extra threads from "  + rows.length + " node(s) to client " + hash);
+        console.log("[INFO]  Distributing " + totalThreads + " extra threads from " + rows.length + " node(s) to client " + hash);
         hosts += "\n";
         callback(hosts);
     });
@@ -202,6 +214,7 @@ module.exports = {
     doCheckin: doCheckin,
     getProjectList: getProjectList,
     getAllHosts: getAllHosts,
+    deleteHost: deleteHost,
     SW_VERSION: SW_VERSION,
     DB_VERSION: DB_VERSION
 };
