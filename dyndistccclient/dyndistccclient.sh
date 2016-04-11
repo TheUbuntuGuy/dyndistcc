@@ -74,7 +74,9 @@ function installScript ()
     cat >> $SCRIPTFILE << ENDOFSCRIPT
 THREADS=\$(nproc)
 wget -o /dev/null -O "$DISTCCHOSTS.tmp" "http://\$SERVERADDRESS:\$PORTNUMBER/api/checkin?hash=\$CLIENTHASH&project=\$PROJECTNAME&username=\$USERNAME&swVersion=\$SWVERSION&threads=\$THREADS"
-mv "$DISTCCHOSTS.tmp" "$DISTCCHOSTS"
+if [ $? -eq 0 ]; then
+    mv "$DISTCCHOSTS.tmp" "$DISTCCHOSTS"
+fi
 ENDOFSCRIPT
 
     chmod +x $SCRIPTFILE
@@ -82,10 +84,13 @@ ENDOFSCRIPT
 
 function askQuestions ()
 {
-    echo "If this host is also running the controller, you must use the public IP address here."
     read -p "What is the hostname/IP address of the controller: " serverAddr
     if [ -z "$serverAddr" ]; then
         echo "Empty server address. Aborting installation."
+        exit 2
+    fi
+    if [ $(getent hosts "$serverAddr" | grep "127\..*\..*\..*\ " | wc -l) -ne 0 ]; then
+        echo "localhost addresses/hostnames are not supported. Use the public IP address instead. Aborting."
         exit 2
     fi
     read -p "What is the port of the controller [33333]: " portNum
