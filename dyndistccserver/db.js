@@ -128,7 +128,7 @@ function deleteHost(hash, callback) {
 
 function doCheckin(hash, project, name, ip, swVersion, threads, callback) {
     // Always return localhost as the first host, even in an error scenario
-    var hosts = "127.0.0.1/4";
+    var hosts = "127.0.0.1";
     var date = new Date();
 
     db.serialize(function () {
@@ -172,19 +172,29 @@ function doCheckin(hash, project, name, ip, swVersion, threads, callback) {
 
 function getHostList(projectID, hash, hosts, callback) {
     var date = new Date();
-    db.all("SELECT ipAddr, threads FROM hosts WHERE projectID=? AND lastContact>? AND hash!=?", projectID, (date.getTime() - 180000), hash, function (err, rows) {
-        if (err) {
+    db.serialize(function () {
+        db.get("SELECT threads FROM hosts WHERE hash=?", hash, function (err, row) {
+            if (err) {
+                callback(hosts);
+                return;
+            }
+            hosts += "/" + row.threads;
+        });
+
+        db.all("SELECT ipAddr, threads FROM hosts WHERE projectID=? AND lastContact>? AND hash!=?", projectID, (date.getTime() - 180000), hash, function (err, rows) {
+            if (err) {
+                callback(hosts);
+                return;
+            }
+            var totalThreads = 0;
+            for (var i = 0; i < rows.length; i++) {
+                hosts += " " + rows[i].ipAddr + "/" + rows[i].threads;
+                totalThreads += rows[i].threads;
+            }
+            console.log("[INFO]  Distributing " + totalThreads + " extra threads from " + rows.length + " node(s) to client " + hash);
+            hosts += "\n";
             callback(hosts);
-            return;
-        }
-        var totalThreads = 0;
-        for (var i = 0; i < rows.length; i++) {
-            hosts += " " + rows[i].ipAddr + "/" + rows[i].threads;
-            totalThreads += rows[i].threads;
-        }
-        console.log("[INFO]  Distributing " + totalThreads + " extra threads from " + rows.length + " node(s) to client " + hash);
-        hosts += "\n";
-        callback(hosts);
+        });
     });
 }
 
