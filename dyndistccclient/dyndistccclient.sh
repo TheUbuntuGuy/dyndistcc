@@ -118,6 +118,10 @@ function askQuestions ()
         echo "Using nice of 10."
         niceValue=10
     fi
+    read -p "The PATH to any cross-compilers [ENTER if none]: " ccPath
+    if [ -z "$ccPath" ]; then
+        echo "Not adding to path."
+    fi
 }
 
 function doInstall ()
@@ -149,6 +153,10 @@ function doInstall ()
     sed -i "/^[^#]*LISTENER=*/c\LISTENER=\"\"" $DISTCCCONF
     sed -i "/^[^#]*ALLOWEDNETS=*/c\ALLOWEDNETS=\"127.0.0.1 $netSegment\"" $DISTCCCONF
     sed -i "/^[^#]*NICE=*/c\NICE=\"$niceValue\"" $DISTCCCONF
+
+    if [ ! -z $ccPath ]; then
+        echo "PATH=\"$ccPath:\$PATH\"" >> $DISTCCCONF
+    fi
 
     echo "Installing scripts..."
     installScript
