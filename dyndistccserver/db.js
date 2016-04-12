@@ -25,7 +25,7 @@ var exists = fs.existsSync(file);
 var sqlite3 = require("sqlite3").verbose();
 var db = new sqlite3.Database(file);
 
-var SW_VERSION = "0.0.3";
+var SW_VERSION = "0.0.4";
 var DB_VERSION = 4;
 
 db.serialize(function () {

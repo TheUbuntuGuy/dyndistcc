@@ -32,6 +32,7 @@ Installing ```dyndistcc``` is easy. The server is a small node.js application, a
    1. Address/hostname of the server
    2. Project name
    3. Nice value for incoming compile jobs
+   4. Cross-compile path (if applicable)
 
 If everything went according to plan, you should be able to refresh the server Control Panel page and see your new host(s) appear.
 ![dyndistcc Control Panel](http://furneaux.ca/dyndistcc/dyndistcc0.0.1.png "dyndistcc Control Panel")
@@ -58,9 +59,14 @@ mark@volta:/media/mark/storage/Projects/dyndistcc/dyndistccserver$ nodejs dyndis
 # How To Actually Compile Something
 There are several ways of building with ```distcc```. The following describes *masquerading*.
 
-1. If you are not cross-compiling skip to step 2. If you are, create symlinks in ```/usr/lib/distcc``` that point to ```/usr/bin/distcc``` and have the name of the cross-compile tools you are using. For example, if you were using ```arm-eabi-gcc```, you should run:  
-```$ ln -s /bin/distcc /usr/lib/distcc/arm-eabi-gcc```. Be sure to create links to all tools used, including assemblers.
-2. *Prepend* the masquerade path to the system ```$PATH``` by running: ```$ export PATH=/usr/lib/distcc:$PATH```
-3. Call ```make``` as usual, except instead of maually entering a thread count with ```-jN```, use ```distcc```'s currently available core count by running: ```$ make -j $(distcc -j)```
+1. If you are not cross-compiling skip to step 3. If you are, create symlinks in ```/usr/lib/distcc``` that point to ```/usr/bin/distcc``` and have the name of the cross-compile tools you are using. For example, if you were using ```arm-eabi-gcc```, you should run:  
+```$ ln -s /usr/bin/distcc /usr/lib/distcc/arm-eabi-gcc```. Be sure to create links to all compilers and assemblers used.
+2. *Prepend* the cross-compiler path to the system ```$PATH``` by running: ```$ export PATH=/my/cross-compiler/path:$PATH```
+3. *Prepend* the masquerade path to the system ```$PATH``` by running: ```$ export PATH=/usr/lib/distcc:$PATH```
+4. Call ```make``` as usual, except instead of maually entering a thread count with ```-jN```, use ```distcc```'s currently available core count by running: ```$ make -j $(distcc -j)```
 
-Step 1 is only done once, and normally you would incorporate steps 2 and 3 into a Makefile such that you don't normally need to run them.
+Step 1 is only done once, and normally you would incorporate steps 2 and 3 into a Makefile such that you don't normally need to run them as such every time.
+
+# Troubleshooting
+
+If ```distcc``` returns error 110, it means that the compiler could not be found. This is usually caused by a bad ```$PATH```. Ensure that the system path has the masquerade path, followed by the cross-compile path, followed by the regular system path. The path should look something like this: ```PATH=/usr/lib/distcc:/path/to/cross-compiler:$PATH```. You can also check the path in ```/etc/default/distcc```. It should have the cross-compile path, followed by the system path. The masquerade path should not be present.
