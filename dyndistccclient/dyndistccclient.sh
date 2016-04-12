@@ -98,10 +98,10 @@ function askQuestions ()
         echo "Using port 33333."
         portNum=33333
     fi
-    read -p "What network segment should we listen on (CIDR notation, eg. 192.168.30.0/24): " netSegment
+    read -p "What network segment should we listen on, in CIDR notation [0.0.0.0/0]: " netSegment
     if [ -z "$netSegment" ]; then
-        echo "Empty segment name. Aborting installation."
-        exit 2
+        echo "Allowing all networks (0.0.0.0/0)."
+        netSegment="0.0.0.0/0"
     fi
     read -p "What project is this client part of (already configured on controller): " projectName
     if [ -z "$projectName" ]; then
