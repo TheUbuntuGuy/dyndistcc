@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with dyndistcc.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION="0.0.4"
+VERSION="0.0.5"
 SCRIPTFILE="/usr/local/bin/dyndistccsync"
 DISTCCCONF="/etc/default/distcc"
 DISTCCHOSTS="/etc/distcc/hosts"
@@ -74,9 +74,11 @@ function installScript ()
     cat >> $SCRIPTFILE << ENDOFSCRIPT
 THREADS=\$(nproc)
 wget -o /dev/null -O "$DISTCCHOSTS.tmp" "http://\$SERVERADDRESS:\$PORTNUMBER/api/checkin?hash=\$CLIENTHASH&project=\$PROJECTNAME&username=\$USERNAME&swVersion=\$SWVERSION&threads=\$THREADS"
-if [ $? -eq 0 ]; then
-    mv "$DISTCCHOSTS.tmp" "$DISTCCHOSTS"
+if [ \$? -eq 0 ]; then
+    mv "\$DISTCCHOSTS.tmp" "\$DISTCCHOSTS"
+    exit 0
 fi
+exit 1
 ENDOFSCRIPT
 
     chmod +x $SCRIPTFILE
@@ -197,11 +199,11 @@ function doInstall ()
     echo ""
     cat << ENDOFTEXT
 If you are cross-compiling, you will need to setup your compiler.
-Create symlinks in /usr/lib/distcc that point to /bin/distcc and have the name of the cross-compile tools you are using.
+Create symlinks in /usr/lib/distcc that point to /usr/bin/distcc and have the name of the cross-compile tools you are using.
 
 For example, if you are using arm-eabi-gcc and arm-eabi-g++, run:
-$ ln -s /bin/distcc /usr/lib/distcc/arm-eabi-gcc
-$ ln -s /bin/distcc /usr/lib/distcc/arm-eabi-g++
+$ ln -s /usr/bin/distcc /usr/lib/distcc/arm-eabi-gcc
+$ ln -s /usr/bin/distcc /usr/lib/distcc/arm-eabi-g++
 ENDOFTEXT
 }
 

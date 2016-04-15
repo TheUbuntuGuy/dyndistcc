@@ -25,8 +25,9 @@ var exists = fs.existsSync(file);
 var sqlite3 = require("sqlite3").verbose();
 var db = new sqlite3.Database(file);
 
-var SW_VERSION = "0.0.4";
+var SW_VERSION = "0.0.5";
 var DB_VERSION = 4;
+var SAFE_LOCAL_COMPILE = false;
 
 db.serialize(function () {
     // Create the database on the first run
@@ -128,8 +129,14 @@ function deleteHost(hash, callback) {
 
 function doCheckin(hash, project, name, ip, swVersion, threads, callback) {
     // Always return localhost as the first host, even in an error scenario
-    var hosts = "127.0.0.1";
+    var hosts;
     var date = new Date();
+    
+    if (SAFE_LOCAL_COMPILE) {
+        hosts = "127.0.0.1";
+    } else {
+        hosts = "localhost";
+    }
 
     db.serialize(function () {
         db.get("SELECT * FROM projects WHERE name=?", project, function (err, row) {
