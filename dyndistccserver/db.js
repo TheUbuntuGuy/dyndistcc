@@ -25,7 +25,7 @@ var exists = fs.existsSync(file);
 var sqlite3 = require("sqlite3").verbose();
 var db = new sqlite3.Database(file);
 
-var SW_VERSION = "0.0.5";
+var SW_VERSION = "0.0.6";
 var DB_VERSION = 4;
 var SAFE_LOCAL_COMPILE = false;
 
@@ -188,7 +188,7 @@ function getHostList(projectID, hash, hosts, callback) {
             hosts += "/" + row.threads;
         });
 
-        db.all("SELECT ipAddr, threads FROM hosts WHERE projectID=? AND lastContact>? AND hash!=?", projectID, (date.getTime() - 180000), hash, function (err, rows) {
+        db.all("SELECT ipAddr, threads FROM hosts WHERE projectID=? AND lastContact>? AND hash!=? ORDER BY RANDOM()", projectID, (date.getTime() - 360000), hash, function (err, rows) {
             if (err) {
                 callback(hosts);
                 return;

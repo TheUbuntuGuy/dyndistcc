@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with dyndistcc.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION="0.0.5"
+VERSION="0.0.6"
 SCRIPTFILE="/usr/local/bin/dyndistccsync"
 DISTCCCONF="/etc/default/distcc"
 DISTCCHOSTS="/etc/distcc/hosts"
@@ -59,8 +59,15 @@ function checkRoot ()
 
 function installScript ()
 {
-    # Generate a random hash to identify this machine in all future checkins with the server
-    clientHash=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+    # Read an existing hash from a prior installation
+    if [ -s "/etc/distcc/hash" ]; then
+        clientHash=$(cat "/etc/distcc/hash")
+    else
+        # Generate a random hash to identify this machine in all future checkins with the server
+        clientHash=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+        # Write it permanently so it survives upgrades
+        echo "$clientHash" > /etc/distcc/hash
+    fi
 
     # Build the checkin script with all the arguments from the installer
     echo "#!/bin/bash" >> $SCRIPTFILE
@@ -171,7 +178,7 @@ function doInstall ()
     fi
 
     # The magic comment is used by the uninstaller
-    echo "* * * * * $SCRIPTFILE #dyndistccAutoRemove" >> $CRONTMP
+    echo "*/5 * * * * $SCRIPTFILE #dyndistccAutoRemove" >> $CRONTMP
     crontab $CRONTMP
     rm $CRONTMP
 
@@ -198,12 +205,21 @@ function doInstall ()
 
     echo ""
     cat << ENDOFTEXT
+===Cross Compiler Setup===
 If you are cross-compiling, you will need to setup your compiler.
 Create symlinks in /usr/lib/distcc that point to /usr/bin/distcc and have the name of the cross-compile tools you are using.
 
 For example, if you are using arm-eabi-gcc and arm-eabi-g++, run:
+$ cd /usr/lib/distcc
 $ ln -s /usr/bin/distcc /usr/lib/distcc/arm-eabi-gcc
 $ ln -s /usr/bin/distcc /usr/lib/distcc/arm-eabi-g++
+
+===How To Compile===
+Ensure that the PATH is ready for masquerading the compiler:
+$ export PATH=/usr/lib/distcc:<cross compile path (if any)>:\$PATH
+
+Run make as usual, except using distcc's current core count instead of a fixed value:
+$ make -j \$(distcc -j)
 ENDOFTEXT
 }
 
