@@ -98,7 +98,7 @@ function askQuestions ()
         echo "Empty server address. Aborting installation."
         exit 2
     fi
-    if [ $(getent hosts "$serverAddr" | grep "127\..*\..*\..*\ " | wc -l) -ne 0 ]; then
+    if [ $(getent ahostsv4 "$serverAddr" | grep "127\..*\..*\..*\ " | wc -l) -ne 0 ]; then
         echo "localhost addresses/hostnames are not supported. Use the public IP address instead. Aborting."
         exit 2
     fi
