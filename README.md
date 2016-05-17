@@ -21,7 +21,7 @@ Installing ```dyndistcc``` is easy. The server is a small node.js application, a
 1. Download the latest release on the Releases page.  
 2. Extract the ```dyndistccserver``` folder from the .zip, place it somewhere on the server, and ```cd``` into it.
 3. Run ```$ sudo npm install .```
-4. Run the server applet with ```$ nodejs dyndistccserver.js``` (append ```&``` to run it in the background)
+4. Run the server applet with ```npm start``` (append ```&``` to run it in the background)
 5. Open a web browser to the server IP address/hostname on port 33333 (```http://localhost:33333``` on the server)
 6. Type in a project name and click ```Create Project```
 
