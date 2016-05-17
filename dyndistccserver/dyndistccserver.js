@@ -135,7 +135,7 @@ http.createServer(function (request, response) {
             response.end();
         });
     }
-}).listen(PORT);
+}).listen(PORT, "0.0.0.0");
 
 function returnError(response) {
     console.log("[ERROR]  Bad command received");
