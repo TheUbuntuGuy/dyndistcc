@@ -1,0 +1,15 @@
+#Systemd unit file for dyndistcc
+[Unit]
+Description=Dynamic Distributed C Compiler Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/dyndistcc/dyndistccserver
+ExecStart=/usr/bin/npm start /dyndistcc/dyndistccserver
+ExecStop=/usr/bin/npm stop dyndistcc/dyndistccserver
+StandardOutput=null  
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
